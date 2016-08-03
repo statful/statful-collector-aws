@@ -70,8 +70,8 @@ gulp.task('dev', ['build-raw', 'watch', 'nodemon']);
 
 gulp.task('watch', () => {
     return watch(srcGlob, ['build-raw'], (file) => {
-        let path = file.path;
-        let event = file.event;
+        let path = file.path,
+        event = file.event;
 
         if (event === "unlink") {
             event = "removed";
