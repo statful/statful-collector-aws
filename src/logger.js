@@ -6,7 +6,9 @@ const _instanceEnforcer = Symbol('instanceEnforcer');
 
 class Logger {
     constructor(instanceEnforcer, config) {
-        if(_instanceEnforcer != instanceEnforcer) throw "Cannot construct singleton";
+        if(_instanceEnforcer !== instanceEnforcer) {
+            throw 'Cannot construct singleton.';
+        }
 
         return bunyan.createLogger({
                 name: config.bunyan.name,
@@ -16,7 +18,12 @@ class Logger {
 
     static sharedInstance(config) {
         if(!this[_instance]) {
-            this[_instance] = new Logger(_instanceEnforcer, config);
+            try {
+                this[_instance] = new Logger(_instanceEnforcer, config);
+            } catch (ex) {
+                console.error('Failed to config Logger instance' + ex);
+                process.exit(1);
+            }
         }
         return this[_instance];
     }

@@ -1,5 +1,5 @@
-import Config from './config'
-import Logger from './logger'
+import Config from './config';
+import Logger from './logger';
 
 (() => {
     const config = new Config((process.argv[2] || undefined));

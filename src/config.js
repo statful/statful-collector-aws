@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
 import path from 'path';
-import {schema} from './schema'
+import {schema} from './schema';
 import {validate} from 'jsonschema';
 import defaultConfig from '../conf/defaults.json';
 
