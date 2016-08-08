@@ -1,9 +1,10 @@
-import Config from './Config'
+import Config from './config'
+import Logger from './logger'
 
 (() => {
     const config = new Config((process.argv[2] || undefined));
     config.load().then(function(loadedConfig){
-        Logger.sharedLogger(loadedConfig);
+        Logger.sharedInstance(loadedConfig);
     });
 })();
 

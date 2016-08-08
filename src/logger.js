@@ -1,15 +1,14 @@
 import bunyan from 'bunyan';
 
-const _logger = Symbol('logger');
 const _getBunyanStreams = Symbol('getBunyanStreams');
 const _instance = Symbol('instance');
 const _instanceEnforcer = Symbol('instanceEnforcer');
 
 class Logger {
     constructor(instanceEnforcer, config) {
-        if(this[_instance] != instanceEnforcer) throw "Cannot construct singleton";
+        if(_instanceEnforcer != instanceEnforcer) throw "Cannot construct singleton";
 
-        this[_logger] = bunyan.createLogger({
+        return bunyan.createLogger({
                 name: config.bunyan.name,
                 streams: this[_getBunyanStreams](config.bunyan.streams)
             });
