@@ -1,7 +1,7 @@
 {
   "name": "aws-collector",
   "version": "1.0.0",
-  "description": "AWS Cloudwatch collector for Statful.",
+  "description": "AWS Cloudwatch collector for Statful",
   "engines": {
     "node": "*"
   },
@@ -38,9 +38,13 @@
     "mocha": "^3.0.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.4.13",
     "babel-polyfill": "^6.6.1",
     "bluebird": "^3.3.3",
-    "source-map-support": "^0.4.0"
+    "bunyan": "^1.8.1",
+    "jsonschema": "^1.1.0",
+    "source-map-support": "^0.4.0",
+    "statful-client": "^4.0.4"
   },
   "repository": {
     "type": "git",

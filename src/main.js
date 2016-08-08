@@ -1,26 +1,9 @@
-import Promise from 'bluebird';
+import Config from './Config'
 
-const bar = () => {
-    let {
-        msg
-    } = {
-        msg: 'Hello World !!!',
-        something: 'something else'
-    };
-
-    return new Promise((resolve, reject) => {
-        setTimeout(() => resolve(msg), 1000);
+(() => {
+    const config = new Config((process.argv[2] || undefined));
+    config.load().then(function(loadedConfig){
+        Logger.sharedLogger(loadedConfig);
     });
-};
-
-async function foo () {
-    console.log(`before async call`);
-    let msg = await bar();
-    console.log(`after async call, msg = ${msg}, this was a template string`);
-    Promise.resolve('babel stage-0 !!!').delay(100).then(::console.log);
-}
-
-foo();
-
-
+})();
 

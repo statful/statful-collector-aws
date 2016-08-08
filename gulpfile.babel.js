@@ -18,8 +18,10 @@ const src = 'src',
     srcGlob = srcPath + '/**/*.' + srcExtension,
     conf = 'conf',
     confPath = path.resolve(conf),
-    confExtension  = 'json',
-    confGlob = confPath + '/**/*.' + confExtension,
+    confExtensions  = '{json, js}',
+    confSrcExtension  = 'js',
+    confGlob = confPath + '/**/*.' + confExtensions,
+    confSrcGlob = confPath + '/**/*.' + confSrcExtension,
     lib = 'lib',
     libPath = path.resolve(lib),
     libExtension = 'js',
@@ -37,7 +39,7 @@ gulp.task('clean' , () => {
 });
 
 gulp.task('compile', () => {
-  return gulp.src(srcGlob)
+  return gulp.src([srcGlob, confSrcGlob])
     .pipe(plumber())
     .pipe(sourcemaps.init())
     .pipe(babel())
@@ -48,7 +50,7 @@ gulp.task('compile', () => {
 gulp.task('build-raw', ['clean', 'compile']);
 
 gulp.task('eslint', () => {
-    return gulp.src(srcGlob)
+    return gulp.src([srcGlob, confSrcGlob])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
@@ -69,7 +71,7 @@ gulp.task('build', ['build-raw', 'test']);
 gulp.task('dev', ['build-raw', 'watch', 'nodemon']);
 
 gulp.task('watch', () => {
-    return watch(srcGlob, ['build-raw'], (file) => {
+    return watch([srcGlob, confSrcGlob], ['build-raw'], (file) => {
         let path = file.path,
         event = file.event;
 

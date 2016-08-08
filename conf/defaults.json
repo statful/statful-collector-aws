@@ -1,0 +1,22 @@
+{
+  "statfulAwsCollector": {
+    "credentials": {
+      "accessKeyId": "foo",
+      "secretAccessKey": "bar"
+    },
+    "frequency": 60000,
+    "metricsBlackList": {}
+  },
+  "bunyan": {
+    "name": "statfulAwsCollector",
+    "streams": []
+  },
+  "statfulClient": {
+    "api": {
+      "token": "YOUR_TOKEN"
+    },
+    "app": "aws-collector",
+    "flushInterval": 30000,
+    "transport": "api"
+  }
+}

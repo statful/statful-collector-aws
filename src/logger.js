@@ -1,0 +1,44 @@
+import bunyan from 'bunyan';
+
+const _logger = Symbol('logger');
+const _getBunyanStreams = Symbol('getBunyanStreams');
+const _instance = Symbol('instance');
+const _instanceEnforcer = Symbol('instanceEnforcer');
+
+class Logger {
+    constructor(instanceEnforcer, config) {
+        if(this[_instance] != instanceEnforcer) throw "Cannot construct singleton";
+
+        this[_logger] = bunyan.createLogger({
+                name: config.bunyan.name,
+                streams: this[_getBunyanStreams](config.bunyan.streams)
+            });
+    }
+
+    static sharedInstance(config) {
+        if(!this[_instance]) {
+            this[_instance] = new Logger(_instanceEnforcer, config);
+        }
+        return this[_instance];
+    }
+
+    load() {
+        return new Promise( (resolve) => {
+            this[_processConfig]().then(function(config){
+                resolve(config);
+            });
+        });
+    }
+
+    [_getBunyanStreams](streams) {
+        if (streams.length === 0) {
+            streams.push({
+                level: 'info',
+                stream: process.stdout
+            });
+        }
+        return streams;
+    }
+}
+
+export default Logger;
