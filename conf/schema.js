@@ -21,9 +21,12 @@ export const schema = {
                 },
                 metricsBlackList: {
                     type: 'object'
+                },
+                signals: {
+                    type: 'array'
                 }
             },
-            required: ['credentials', 'frequency']
+            required: ['credentials', 'frequency', 'signals']
         },
         bunyan: {
             type: 'object',

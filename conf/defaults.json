@@ -5,7 +5,12 @@
       "secretAccessKey": "bar"
     },
     "frequency": 60000,
-    "metricsBlackList": {}
+    "metricsBlackList": {},
+    "signals": [
+      "SIGTERM",
+      "SIGINT",
+      "SIGABRT"
+    ]
   },
   "bunyan": {
     "name": "statfulAwsCollector",
