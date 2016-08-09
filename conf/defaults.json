@@ -4,8 +4,9 @@
       "accessKeyId": "foo",
       "secretAccessKey": "bar"
     },
-    "frequency": 60000,
-    "metricsBlackList": {},
+    "period": 60,
+    "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
+    "metricsList": {},
     "signals": [
       "SIGTERM",
       "SIGINT",
@@ -17,11 +18,11 @@
     "streams": []
   },
   "statfulClient": {
+    "transport": "api",
     "api": {
-      "token": "YOUR_TOKEN"
+      "token": "@YOUR_API_TOKEN"
     },
-    "app": "aws-collector",
-    "flushInterval": 30000,
-    "transport": "api"
+    "app": "statful-aws-collector",
+    "flushInterval": 30000
   }
 }

@@ -16,17 +16,25 @@ export const schema = {
                         }
                     }
                 },
-                frequency: {
-                    type: 'number'
+                period: {
+                    type: 'number',
+                    enum: [60, 120, 180, 300]
                 },
-                metricsBlackList: {
+                statistics: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        enum: ['SampleCount', 'Average', 'Sum', 'Minimum', 'Maximum']
+                    }
+                },
+                metricsList: {
                     type: 'object'
                 },
                 signals: {
                     type: 'array'
                 }
             },
-            required: ['credentials', 'frequency', 'signals']
+            required: ['credentials', 'period', 'signals']
         },
         bunyan: {
             type: 'object',
