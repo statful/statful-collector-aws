@@ -5,11 +5,11 @@ import whilst from 'async/whilst';
 import queue from 'async/queue';
 
 let _config = Symbol('config');
-const processRequest = Symbol('processRequest') ;
+const _processRequest = Symbol('processRequest') ;
 let _requests = Symbol('requests');
-const spawnRequest = Symbol('spawnRequest');
-const startCollecting = Symbol('startCollecting');
-const stopCollecting = Symbol('stopCollecting');
+const _spawnRequest = Symbol('spawnRequest');
+const _startCollecting = Symbol('startCollecting');
+const _stopCollecting = Symbol('stopCollecting');
 let _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
 
 class Collector {
@@ -18,7 +18,7 @@ class Collector {
         this.started = false;
         this.log = Logger.sharedInstance().child({file: Util.getCurrentFile(module)}, true);
         this[_requests] = queue((request, callback) => {
-            this[processRequest](request, callback);
+            this[_processRequest](request, callback);
         });
         this[_utcTimeToStopProcessingRequests] = null;
     }
@@ -29,7 +29,7 @@ class Collector {
                 this.log.info('Collector begins start process.');
 
                 this.started = true;
-                this[startCollecting]();
+                this[_startCollecting]();
 
                 this.log.info('Collector was started.');
                 resolve();
@@ -48,7 +48,7 @@ class Collector {
 
                 this.started = false;
 
-                this[stopCollecting]().then( () => {
+                this[_stopCollecting]().then( () => {
 
                     this.log.info('Collector was stopped.');
                     resolve();
@@ -62,7 +62,7 @@ class Collector {
         });
     }
 
-    [processRequest](request, callback) {
+    [_processRequest](request, callback) {
         if (!this[_utcTimeToStopProcessingRequests] || request.endTime >= this[_utcTimeToStopProcessingRequests]) {
             setTimeout(() => {
                 callback();
@@ -73,25 +73,25 @@ class Collector {
         }
     }
 
-    [spawnRequest](callback) {
+    [_spawnRequest](callback) {
         this[_requests].push({endTime: new Date().getTime()});
         setTimeout(() => {
             callback();
         }, 1000);
     }
 
-    [startCollecting]() {
+    [_startCollecting]() {
         whilst(
             () => {
                 return this.started;
             },
             (callback) => {
-                this[spawnRequest](callback);
+                this[_spawnRequest](callback);
             }
         );
     }
 
-    [stopCollecting]() {
+    [_stopCollecting]() {
         this[_utcTimeToStopProcessingRequests] = new Date().getTime();
 
         return new Promise( (resolve) => {
