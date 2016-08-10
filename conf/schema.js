@@ -28,7 +28,16 @@ export const schema = {
                     }
                 },
                 metricsList: {
-                    type: 'object'
+                    type: 'object',
+                    properties: {
+                        type: {
+                            type: 'string',
+                            enum: ['white', 'black']
+                        },
+                        metrics: {
+                            type: 'object'
+                        }
+                    }
                 },
                 signals: {
                     type: 'array'

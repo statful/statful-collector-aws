@@ -6,11 +6,15 @@
     },
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
-    "metricsList": {},
+    "metricsList": {
+      "type": "black",
+      "metrics": {}
+    },
     "signals": [
       "SIGTERM",
       "SIGINT",
-      "SIGABRT"
+      "SIGABRT",
+      "SIGUSR2"
     ]
   },
   "bunyan": {
