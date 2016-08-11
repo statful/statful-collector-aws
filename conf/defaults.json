@@ -1,14 +1,14 @@
 {
   "statfulAwsCollector": {
     "credentials": {
-      "accessKeyId": "foo",
-      "secretAccessKey": "bar"
+      "accessKeyId": "AKIAJF2YEDN6EAV27ALQ",
+      "secretAccessKey": "kFGnWvr7Mxv1IQPWNnBoYlYeYNkjm7Gcw017Wi6e"
     },
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
     "metricsList": {
       "type": "black",
-      "metrics": {}
+      "metricsPerRegion": {}
     },
     "signals": [
       "SIGTERM",

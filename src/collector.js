@@ -4,9 +4,9 @@ import Logger from './logger';
 import whilst from 'async/whilst';
 import queue from 'async/queue';
 import Request from './request';
-import {dateFormat} from 'dateformat';
 
 let _config = Symbol('config');
+const _isProcessingRequest = Symbol('isProcessingRequest');
 const _processRequest = Symbol('processRequest') ;
 let _requests = Symbol('requests');
 const _spawnRequest = Symbol('spawnRequest');
@@ -24,6 +24,7 @@ class Collector {
             this[_processRequest](request, callback);
         });
         this[_utcTimeToStopProcessingRequests] = -1;
+        this[_isProcessingRequest] = false;
     }
 
     start() {
@@ -34,11 +35,12 @@ class Collector {
                 this.started = true;
                 this.isStopping = false;
                 this[_utcTimeToStopProcessingRequests] = -1;
+                this[_isProcessingRequest] = false;
 
-                this[_startCollecting]();
-
-                this.log.info('Collector was started.');
-                resolve();
+                this[_startCollecting]().then( () => {
+                    this.log.info('Collector was started.');
+                    resolve();
+                });
             } else if(this.isStopping) {
                 this.log.info('You can\'t start Collector because it\'s still stopping.');
             } else {
@@ -75,8 +77,16 @@ class Collector {
 
     [_processRequest](request, callback) {
         if (request instanceof Request) {
-            if (this[_utcTimeToStopProcessingRequests] === -1 || request.endTime <= this[_utcTimeToStopProcessingRequests]) {
+            let requestEndTimeUTC = new Date(request.endTime).getTime();
+            if (this[_utcTimeToStopProcessingRequests] === -1 || requestEndTimeUTC <= this[_utcTimeToStopProcessingRequests]) {
+                console.log('start processing request');
+                console.log(this[_requests].length());
+
+                this[_isProcessingRequest] = true;
                 request.execute().then(() => {
+                    this[_isProcessingRequest] = false;
+                    console.log('request processed');
+                    console.log(this[_requests].length());
                     callback();
                 });
             } else {
@@ -89,27 +99,39 @@ class Collector {
     }
 
     [_spawnRequest](callback) {
-        let now = new Date();
-        let startTime = dateFormat(now.setSeconds(now.getSeconds() - (this[_config].statfulAwsCollector.period + 1)), 'isoUtcDateTime');
-        let endTime = dateFormat(now, 'isoUtcDateTime');
+        if (!this.isStopping) {
+            let now = new Date();
+            let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulAwsCollector.period - 1)));
+            let startTime = nowMinusPastPeriod.toISOString();
+            let endTime = now.toISOString();
 
-        this[_requests].push(new Request(this[_config], startTime, endTime));
+            console.log('request spawned');
 
-        // Proceed to spawn another request
+            this[_requests].push(new Request(this[_config], startTime, endTime));
+        }
+        // Scheduler to try to spawn another request
         setTimeout(() => {
             callback();
         }, this[_config].statfulAwsCollector.period * 1000);
     }
 
     [_startCollecting]() {
-        whilst(
-            () => {
-                return this.started;
-            },
-            (callback) => {
-                this[_spawnRequest](callback);
+        return new Promise( (resolve) => {
+            whilst(
+                () => {
+                    return this.started;
+                },
+                (callback) => {
+                    setTimeout(() => {
+                        this[_spawnRequest](callback);
+                    }, 0);
+                }
+            );
+
+            if (this.started) {
+                resolve();
             }
-        );
+        });
     }
 
     [_stopCollecting]() {
@@ -118,7 +140,7 @@ class Collector {
         return new Promise( (resolve) => {
             whilst(
                 () => {
-                    return this[_requests].length() > 0;
+                    return this[_requests].length() > 0 || this[_isProcessingRequest];
                 },
                 (callback) => {
                     setTimeout(() => {
