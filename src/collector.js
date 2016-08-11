@@ -4,6 +4,7 @@ import Logger from './logger';
 import whilst from 'async/whilst';
 import queue from 'async/queue';
 import Request from './request';
+import MetricsList from './metrics-list';
 
 let _config = Symbol('config');
 const _isProcessingRequest = Symbol('isProcessingRequest');
@@ -13,6 +14,10 @@ const _spawnRequest = Symbol('spawnRequest');
 const _startCollecting = Symbol('startCollecting');
 const _stopCollecting = Symbol('stopCollecting');
 let _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
+const _metricsList = Symbol('metricsList');
+const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
+const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
+const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
 
 class Collector {
     constructor(config) {
@@ -25,6 +30,7 @@ class Collector {
         });
         this[_utcTimeToStopProcessingRequests] = -1;
         this[_isProcessingRequest] = false;
+        this[_metricsList] = new MetricsList(this[_config]);
     }
 
     start() {
@@ -36,11 +42,15 @@ class Collector {
                 this.isStopping = false;
                 this[_utcTimeToStopProcessingRequests] = -1;
                 this[_isProcessingRequest] = false;
+                this[_metricsList].clearMetricsPerRegion();
 
-                this[_startCollecting]().then( () => {
+                let startPromises = [this[_startCollecting](), this[_startMetricsListUpdate]()];
+                Promise.all(startPromises).then( () => {
                     this.log.info('Collector was started.');
                     resolve();
                 });
+
+
             } else if(this.isStopping) {
                 this.log.info('You can\'t start Collector because it\'s still stopping.');
             } else {
@@ -60,6 +70,14 @@ class Collector {
                 this.isStopping = true;
 
                 this[_stopCollecting]().then( () => {
+                    this.isStopping = false;
+                    this.log.info('Collector was stopped.');
+                    resolve();
+                    process.exit(0);
+                });
+
+                let stopPromises = [this[_stopCollecting](), this[_stopMetricsListUpdate]()];
+                Promise.all(stopPromises).then( () => {
                     this.isStopping = false;
                     this.log.info('Collector was stopped.');
                     resolve();
@@ -107,7 +125,9 @@ class Collector {
 
             console.log('request spawned');
 
-            this[_requests].push(new Request(this[_config], startTime, endTime));
+            this[_metricsList].getMetricsPerRegion().then( (metricsPerRegion) => {
+                this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime));
+            });
         }
         // Scheduler to try to spawn another request
         setTimeout(() => {
@@ -151,6 +171,23 @@ class Collector {
                     resolve();
                 }
             );
+        });
+    }
+
+    [_startMetricsListUpdate]() {
+        return new Promise( (resolve) => {
+            this[_metricsListUpdateInterval] = setInterval( () => {
+                console.log('requested metrics list update');
+                this[_metricsList].buildMetricsPerRegion();
+            }, Util.getMetricListUpdateTime() * 1000);
+            resolve();
+        });
+    }
+
+    [_stopMetricsListUpdate]() {
+        return new Promise( (resolve) => {
+            clearInterval(this[_metricsListUpdateInterval]);
+            resolve();
         });
     }
 }

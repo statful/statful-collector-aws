@@ -35,7 +35,43 @@ export const schema = {
                             enum: ['white', 'black']
                         },
                         metricsPerRegion: {
-                            type: 'object'
+                            type: 'object',
+                            patternProperties: {
+                                "^.*(us-east-1|us-west-1|us-west-2|ap-south-1|ap-northeast-1|ap-northeast-2|ap-southeast-1|ap-southeast-2|eu-central-1|eu-west-1|sa-east-1).*$s": {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            MetricName: {
+                                                type: 'string'
+                                            },
+                                            Namespace: {
+                                                type: 'string'
+                                            },
+                                            Dimensions: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        Name: {
+                                                            type: 'string',
+                                                            minLength: '1',
+                                                            maxLength: '255'
+                                                        },
+                                                        Value: {
+                                                            type: 'string',
+                                                            minLength: '1',
+                                                            maxLength: '255'
+                                                        }
+                                                    },
+                                                    required: ['Name']
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            additionalProperties: false
                         }
                     }
                 },
