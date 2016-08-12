@@ -10,9 +10,11 @@ const _period = Symbol('period');
 const _startTime = Symbol('startTime');
 const _statistics = Symbol('statistics');
 
+const _cloudWatchGetMetricStatistics = Symbol('cloudWatchGetMetricStatistics');
 const _sendAWSMetricsData = Symbol('sendAWSMetricsData');
 const _getAWSMetricsData = Symbol('getAWSMetricsData');
 const _metricsPerRegion = Symbol('metricsPerRegion');
+const _receivedDataPerRegion = Symbol('receivedDataPerRegion');
 
 class Request {
     constructor(config, metricsPerRegion, startTime, endTime) {
@@ -35,6 +37,7 @@ class Request {
                 },
                 (callback) => {
                     this[_sendAWSMetricsData]().then( () => {
+                        console.log('request data received and processed');
                         callback(null);
                     });
                 }
@@ -44,36 +47,57 @@ class Request {
             });
         });
     }
+    [_cloudWatchGetMetricStatistics](region, metric) {
+        return new Promise( (resolve) => {
+            let cloudWatch = new AWS.CloudWatch({
+                accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
+                secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
+                region: region
+            });
+            let reqParams = {
+                StartTime: this[_startTime],
+                EndTime: this[_endTime],
+                Period: this[_period],
+                Statistics: this[_statistics],
+                MetricName: metric.MetricName,
+                Namespace: metric.Namespace,
+                Dimensions: metric.Dimensions
+            };
+
+            cloudWatch.getMetricStatistics(reqParams,  (err, data) => {
+                resolve({region:region, data:data});
+            });
+        });
+    }
 
     [_getAWSMetricsData]() {
         return new Promise( (resolve) => {
+            let requestsPromises = [];
 
             eachOf(this[_metricsPerRegion], (metrics, region, eachOfRegionsCallback) => {
-                let cloudWatch = new AWS.CloudWatch({
-                    accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
-                    secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
-                    region: region
-                });
-
                 each(metrics, (metric, eachMetricCallback) => {
-                    let requestParams = {
-                        StartTime: this[_startTime],
-                        EndTime: this[_endTime],
-                        Period: this[_period],
-                        Statistics: this[_statistics],
-                        MetricName: metric.MetricName,
-                        Namespace: metric.Namespace,
-                        Dimensions: metric.Dimensions
-                    };
-
-                    cloudWatch.getMetricStatistics(requestParams,  (err, data) => {
-                        eachMetricCallback(null);
-                    });
+                    requestsPromises.push(this[_cloudWatchGetMetricStatistics](region, metric));
+                    eachMetricCallback(null);
                 }, (err) => {
                     eachOfRegionsCallback(null);
                 });
             }, (err) => {
-                resolve();
+                Promise.all(requestsPromises).then( (allRequestsData) => {
+                    each(allRequestsData, (requestData, eachCallback) => {
+                        if (requestData.data.length > 0) {
+                            if (!this[_receivedDataPerRegion]) {
+                                this[_receivedDataPerRegion] = {};
+                            }
+                            if (!this[_receivedDataPerRegion].hasOwnProperty(requestData.region)) {
+                                this[_receivedDataPerRegion][requestData.region] = [];
+                            }
+                            this[_receivedDataPerRegion][requestData.region] = this[_receivedDataPerRegion][requestData.region].concat(requestData.data);
+                        }
+                        eachCallback(null);
+                    }, (err) => {
+                        resolve();
+                    });
+                });
             });
         });
     }
