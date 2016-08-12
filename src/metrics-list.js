@@ -18,7 +18,6 @@ class MetricsList {
     }
 
     buildMetricsPerRegion() {
-        // TODO - Refactor: Move all that code below into separated functions
         return new Promise( (resolve) => {
             if (this[_config].statfulAwsCollector.metricsList.type === 'white') {
                 let whiteListConfig = this[_config].statfulAwsCollector.metricsList.metricsPerRegion;
@@ -50,6 +49,7 @@ class MetricsList {
                     });
                 });
             } else {
+                // TODO - Refactor the black list method or remove if it still takes too long to end
                 let availableAWSRegions = Util.getAWSAvailableRegions();
                 let blacklistedRegions = Object.keys(this[_config].statfulAwsCollector.metricsList);
                 let auxMetricsPerRegion = {};

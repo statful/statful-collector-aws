@@ -9,7 +9,6 @@ const _endTime = Symbol('endTime');
 const _period = Symbol('period');
 const _startTime = Symbol('startTime');
 const _statistics = Symbol('statistics');
-
 const _cloudWatchGetMetricStatistics = Symbol('cloudWatchGetMetricStatistics');
 const _sendAWSMetricsData = Symbol('sendAWSMetricsData');
 const _getAWSMetricsData = Symbol('getAWSMetricsData');
@@ -24,6 +23,7 @@ class Request {
         this[_period] = this[_config].statfulAwsCollector.period;
         this[_statistics] = this[_config].statfulAwsCollector.statistics;
         this[_metricsPerRegion] = metricsPerRegion;
+        this[_receivedDataPerRegion] = {};
     }
 
     execute() {
@@ -65,6 +65,13 @@ class Request {
             };
 
             cloudWatch.getMetricStatistics(reqParams,  (err, data) => {
+                if (data) {
+                    data.Period = this[_period];
+                    data.Statistics = this[_statistics];
+                    data.MetricName = metric.MetricName;
+                    data.Namespace = metric.Namespace;
+                    data.Dimensions = metric.Dimensions;
+                }
                 resolve({region:region, data:data});
             });
         });
@@ -84,10 +91,7 @@ class Request {
             }, (err) => {
                 Promise.all(requestsPromises).then( (allRequestsData) => {
                     each(allRequestsData, (requestData, eachCallback) => {
-                        if (requestData.data.length > 0) {
-                            if (!this[_receivedDataPerRegion]) {
-                                this[_receivedDataPerRegion] = {};
-                            }
+                        if (requestData && requestData.data && requestData.data.Datapoints && requestData.data.Datapoints.length > 0) {
                             if (!this[_receivedDataPerRegion].hasOwnProperty(requestData.region)) {
                                 this[_receivedDataPerRegion][requestData.region] = [];
                             }

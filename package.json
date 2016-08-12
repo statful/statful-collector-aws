@@ -44,6 +44,7 @@
     "bluebird": "^3.3.3",
     "bunyan": "^1.8.1",
     "jsonschema": "^1.1.0",
+    "lodash": "^4.15.0",
     "source-map-support": "^0.4.0",
     "statful-client": "^4.0.4"
   },

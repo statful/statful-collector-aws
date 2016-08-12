@@ -6,14 +6,14 @@ import queue from 'async/queue';
 import Request from './request';
 import MetricsList from './metrics-list';
 
-let _config = Symbol('config');
+const _config = Symbol('config');
 const _isProcessingRequest = Symbol('isProcessingRequest');
 const _processRequest = Symbol('processRequest') ;
-let _requests = Symbol('requests');
+const _requests = Symbol('requests');
 const _spawnRequest = Symbol('spawnRequest');
 const _startCollecting = Symbol('startCollecting');
 const _stopCollecting = Symbol('stopCollecting');
-let _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
+const _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
 const _metricsList = Symbol('metricsList');
 const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
 const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
