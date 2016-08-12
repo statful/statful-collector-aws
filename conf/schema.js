@@ -37,19 +37,24 @@ export const schema = {
                         metricsPerRegion: {
                             type: 'object',
                             patternProperties: {
-                                "^.*(us-east-1|us-west-1|us-west-2|ap-south-1|ap-northeast-1|ap-northeast-2|ap-southeast-1|ap-southeast-2|eu-central-1|eu-west-1|sa-east-1).*$s": {
+                                '^.*(us-east-1|us-west-1|us-west-2|ap-south-1|ap-northeast-1|ap-northeast-2|ap-southeast-1|ap-southeast-2|eu-central-1|eu-west-1|sa-east-1).*$': {
                                     type: 'array',
                                     items: {
                                         type: 'object',
                                         properties: {
                                             MetricName: {
-                                                type: 'string'
+                                                type: 'string',
+                                                minLength: '1',
+                                                maxLength: '255'
                                             },
                                             Namespace: {
-                                                type: 'string'
+                                                type: 'string',
+                                                minLength: '1',
+                                                maxLength: '255'
                                             },
                                             Dimensions: {
                                                 type: 'array',
+                                                maxItems: 10,
                                                 items: {
                                                     type: 'object',
                                                     properties: {

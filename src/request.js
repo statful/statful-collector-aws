@@ -1,5 +1,8 @@
 import Promise from 'bluebird';
 import series from 'async/series';
+import each from 'async/each';
+import eachOf from 'async/eachOf';
+import AWS from 'aws-sdk';
 
 const _config = Symbol('config');
 const _endTime = Symbol('endTime');
@@ -44,7 +47,34 @@ class Request {
 
     [_getAWSMetricsData]() {
         return new Promise( (resolve) => {
-            resolve();
+
+            eachOf(this[_metricsPerRegion], (metrics, region, eachOfRegionsCallback) => {
+                let cloudWatch = new AWS.CloudWatch({
+                    accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
+                    secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
+                    region: region
+                });
+
+                each(metrics, (metric, eachMetricCallback) => {
+                    let requestParams = {
+                        StartTime: this[_startTime],
+                        EndTime: this[_endTime],
+                        Period: this[_period],
+                        Statistics: this[_statistics],
+                        MetricName: metric.MetricName,
+                        Namespace: metric.Namespace,
+                        Dimensions: metric.Dimensions
+                    };
+
+                    cloudWatch.getMetricStatistics(requestParams,  (err, data) => {
+                        eachMetricCallback(null);
+                    });
+                }, (err) => {
+                    eachOfRegionsCallback(null);
+                });
+            }, (err) => {
+                resolve();
+            });
         });
     }
 

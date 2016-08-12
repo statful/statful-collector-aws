@@ -27,7 +27,7 @@ class Collector {
         this.log = Logger.sharedInstance().child({file: Util.getCurrentFile(module)}, true);
         this[_requests] = queue((request, callback) => {
             this[_processRequest](request, callback);
-        });
+        }, 3);
         this[_utcTimeToStopProcessingRequests] = -1;
         this[_isProcessingRequest] = false;
         this[_metricsList] = new MetricsList(this[_config]);
@@ -100,9 +100,10 @@ class Collector {
                 console.log('start processing request');
                 console.log(this[_requests].length());
 
-                this[_isProcessingRequest] = true;
+                this[_isProcessingRequest]++;
+
                 request.execute().then(() => {
-                    this[_isProcessingRequest] = false;
+                    this[_isProcessingRequest]--;
                     console.log('request processed');
                     console.log(this[_requests].length());
                     callback();
@@ -123,9 +124,8 @@ class Collector {
             let startTime = nowMinusPastPeriod.toISOString();
             let endTime = now.toISOString();
 
-            console.log('request spawned');
-
             this[_metricsList].getMetricsPerRegion().then( (metricsPerRegion) => {
+                console.log('request spawned');
                 this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime));
             });
         }
@@ -160,7 +160,7 @@ class Collector {
         return new Promise( (resolve) => {
             whilst(
                 () => {
-                    return this[_requests].length() > 0 || this[_isProcessingRequest];
+                    return this[_requests].length() > 0 || this[_isProcessingRequest] > 0;
                 },
                 (callback) => {
                     setTimeout(() => {

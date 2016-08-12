@@ -8,6 +8,7 @@ import AWS from 'aws-sdk';
 import {Util} from './util';
 
 const _config = Symbol('config');
+const _cloudWatchListMetrics = Symbol('cloudWatchListMetrics');
 const _metricsPerRegion = Symbol('metricsPerRegion');
 
 class MetricsList {
@@ -16,16 +17,38 @@ class MetricsList {
         this[_metricsPerRegion] = null;
     }
 
-    clearMetricsPerRegion() {
-        this[_metricsPerRegion] = null;
-    }
-
     buildMetricsPerRegion() {
-        // TODO - Move all that code below into separated functions
+        // TODO - Refactor: Move all that code below into separated functions
         return new Promise( (resolve) => {
             if (this[_config].statfulAwsCollector.metricsList.type === 'white') {
-                this[_metricsPerRegion] = this[_config].statfulAwsCollector.metricsList;
-                resolve();
+                let whiteListConfig = this[_config].statfulAwsCollector.metricsList.metricsPerRegion;
+                let requestsPromises = [];
+
+                eachOf(whiteListConfig, (metrics, region, eachOfCallback) => {
+                    each(metrics, (metric, eachCallback) => {
+                        requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
+                        eachCallback(null);
+                    }, (err) => {
+                        eachOfCallback(null);
+                    });
+                }, (err) => {
+                    Promise.all(requestsPromises).then( (allRequestsData) => {
+                        each(allRequestsData, (requestData, eachCallback) => {
+                            if (requestData.data.length > 0) {
+                                if (!this[_metricsPerRegion]) {
+                                    this[_metricsPerRegion] = {};
+                                }
+                                if (!this[_metricsPerRegion].hasOwnProperty(requestData.region)) {
+                                    this[_metricsPerRegion][requestData.region] = [];
+                                }
+                                this[_metricsPerRegion][requestData.region] = this[_metricsPerRegion][requestData.region].concat(requestData.data);
+                            }
+                            eachCallback(null);
+                        }, (err) => {
+                            resolve();
+                        });
+                    });
+                });
             } else {
                 let availableAWSRegions = Util.getAWSAvailableRegions();
                 let blacklistedRegions = Object.keys(this[_config].statfulAwsCollector.metricsList);
@@ -151,10 +174,70 @@ class MetricsList {
         });
     }
 
+    clearMetricsPerRegion() {
+        this[_metricsPerRegion] = null;
+    }
+
+    [_cloudWatchListMetrics](region, reqParams) {
+        return new Promise( (resolve) => {
+            let cloudWatch = new AWS.CloudWatch({
+                accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
+                secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
+                region: region
+            });
+            let completedRequests = 0;
+            let pendingRequests = [];
+            let receivedData = [];
+            let requestedRequests = 0;
+            let reqParamsCopy = Util.deepCopy(reqParams);
+
+            doWhilst(
+                (doDuringCallback) => {
+                    // Handle first request
+                    if (requestedRequests === 0) {
+                        pendingRequests.push(reqParamsCopy);
+                        requestedRequests++;
+                    }
+
+                    if (pendingRequests.length > 0) {
+                        let request = pendingRequests.shift();
+
+
+                        cloudWatch.listMetrics(request, (err, data) => {
+                            if (data && data.Metrics && data.Metrics.length > 0) {
+                                receivedData = receivedData.concat(data.Metrics);
+                                console.log('received metrics list with data');
+                            }
+
+                            if (data && data.NextToken) {
+                                reqParamsCopy.NextToken = data.NextToken;
+                                pendingRequests.push(reqParamsCopy);
+                                requestedRequests++;
+                                console.log('received metrics list with next token');
+                            }
+
+                            completedRequests++;
+                        });
+                    }
+                    setTimeout( () => {
+                        doDuringCallback(null);
+                    }, 0);
+                },
+                () => {
+                    return (pendingRequests.length > 0 || requestedRequests > completedRequests);
+                },
+                (err) => {
+                    resolve({region: region, data:receivedData});
+                }
+            );
+        });
+    }
+
     getMetricsPerRegion() {
         return new Promise( (resolve) => {
             if (!this[_metricsPerRegion]) {
                 this.buildMetricsPerRegion().then( () => {
+                    console.log("MUHA: " + this[_metricsPerRegion]);
                     resolve(this[_metricsPerRegion]);
                 });
             } else {

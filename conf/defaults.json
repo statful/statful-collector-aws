@@ -7,8 +7,14 @@
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
     "metricsList": {
-      "type": "black",
-      "metricsPerRegion": {}
+      "type": "white",
+      "metricsPerRegion": {
+        "us-west-2": [
+          {
+            "Namespace": "AWS/ELB"
+          }
+        ]
+      }
     },
     "signals": [
       "SIGTERM",
