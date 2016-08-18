@@ -70,22 +70,20 @@ class MetricsList {
                     (taskCallback) => {
                         // Get available metrics and filter it by blacklist
                         eachOf(auxMetricsPerRegion, (metrics, region, eachOfCallback) => {
-                            each(metrics, (metric, eachCallback) => {
-                                requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
-                                eachCallback(null);
-                            }, (err) => {
-                                eachOfCallback(null);
-                            });
+                            requestsPromises.push(this[_cloudWatchListMetrics](region, {}));
+                            eachOfCallback(null);
                         }, (err) => {
                             taskCallback(null);
                         });
                     }
                 ],
                 (err, results) => {
+                    console.log(requestsPromises.length);
                     Promise.all(requestsPromises).then( (allRequestsData) => {
                         each(allRequestsData, (requestData, eachCallback) => {
                             if (requestData.data.length > 0) {
                                 let metricsToFilterByBlacklist = requestData.data;
+                                let region = requestData.region;
 
                                 filter(metricsToFilterByBlacklist, (metric, filterCallback) => {
                                     // Test if metric is to filter
@@ -216,7 +214,7 @@ class MetricsList {
         return new Promise( (resolve) => {
             if (!this[_metricsPerRegion]) {
                 this.buildMetricsPerRegion().then( () => {
-                    console.log("MUHA: " + this[_metricsPerRegion]);
+                    console.log("MUHA: " + Object.keys(this[_metricsPerRegion]));
                     resolve(this[_metricsPerRegion]);
                 });
             } else {
