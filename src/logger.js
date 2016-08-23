@@ -39,7 +39,7 @@ class Logger {
     [_getBunyanStreams](streams) {
         if (streams.length === 0) {
             streams.push({
-                level: 'info',
+                level: 'debug',
                 stream: process.stdout
             });
         }

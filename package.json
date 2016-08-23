@@ -46,7 +46,7 @@
     "jsonschema": "^1.1.0",
     "lodash": "^4.15.0",
     "source-map-support": "^0.4.0",
-    "statful-client": "^4.0.4"
+    "statful-client": "~4.1.0"
   },
   "repository": {
     "type": "git",

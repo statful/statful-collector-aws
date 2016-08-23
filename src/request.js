@@ -14,9 +14,10 @@ const _sendAWSMetricsData = Symbol('sendAWSMetricsData');
 const _getAWSMetricsData = Symbol('getAWSMetricsData');
 const _metricsPerRegion = Symbol('metricsPerRegion');
 const _receivedDataPerRegion = Symbol('receivedDataPerRegion');
+const _statfulClient = Symbol('statfulClient');
 
 class Request {
-    constructor(config, metricsPerRegion, startTime, endTime) {
+    constructor(config, metricsPerRegion, startTime, endTime, statfulClient) {
         this[_config] = config;
         this[_startTime] = startTime;
         this[_endTime] = endTime;
@@ -24,6 +25,7 @@ class Request {
         this[_statistics] = this[_config].statfulAwsCollector.statistics;
         this[_metricsPerRegion] = metricsPerRegion;
         this[_receivedDataPerRegion] = {};
+        this[_statfulClient] = statfulClient;
     }
 
     execute() {
@@ -83,6 +85,7 @@ class Request {
 
             eachOf(this[_metricsPerRegion], (metrics, region, eachOfRegionsCallback) => {
                 each(metrics, (metric, eachMetricCallback) => {
+
                     requestsPromises.push(this[_cloudWatchGetMetricStatistics](region, metric));
                     eachMetricCallback(null);
                 }, (err) => {
@@ -108,7 +111,62 @@ class Request {
 
     [_sendAWSMetricsData]() {
         return new Promise( (resolve) => {
-            resolve();
+            eachOf(this[_receivedDataPerRegion], (metrics, region, eachOfRegionsCallback) => {
+                each(metrics, (metric, eachMetricCallback) => {
+                    let metricName = metric.MetricName;
+                    let metricNamespace = metric.Namespace.replace("/", ".");
+                    let metricAggFreq = metric.Period;
+                    let metricTags = {
+                        region: region
+                    };
+
+                    metric.Dimensions.forEach( (dimension) => {
+                        metricTags[dimension.Name] = dimension.Value;
+                    });
+
+                    each(metric.Datapoints, (dataPoint, eachDataPointCallback) => {
+                        let metricTimestamp = Math.round(new Date(dataPoint.Timestamp).getTime() / 1000);
+
+                        metricTags['Unit'] = dataPoint.Unit;
+
+                        this[_config].statfulAwsCollector.statistics.forEach( (statistic) => {
+                            let metricValue = dataPoint[statistic];
+                            let metricAgg = null;
+
+                            switch (statistic) {
+                                case 'SampleCount':
+                                    metricAgg = 'count';
+                                    break;
+                                case 'Average':
+                                    metricAgg = 'avg';
+                                    break;
+                                case 'Sum':
+                                    metricAgg = 'sum';
+                                    break;
+                                case 'Minimum':
+                                    metricAgg = 'min';
+                                    break;
+                                case 'Maximum':
+                                    metricAgg = 'max';
+                                    break;
+                            }
+
+                            if (metricAgg) {
+                                this[_statfulClient].aggregatedPut(metricName, metricValue, metricAgg, metricAggFreq, {namespace:metricNamespace, tags:metricTags, timestamp: metricTimestamp});
+                            }
+                        });
+
+                        eachDataPointCallback(null);
+                    }, (err) => {
+                        eachMetricCallback(null);
+                    });
+                }, (err) => {
+                    eachOfRegionsCallback(null);
+                });
+            }, (err) => {
+                this[_receivedDataPerRegion] = {};
+                resolve();
+            });
         });
     }
 }

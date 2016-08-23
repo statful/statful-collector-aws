@@ -1,20 +1,25 @@
 import Promise from 'bluebird';
-import series from 'async/series';
 import each from 'async/each';
 import eachOf from 'async/eachOf';
 import doWhilst from 'async/doWhilst';
-import filter from 'async/filter';
 import AWS from 'aws-sdk';
 import {Util} from './util';
 
 const _config = Symbol('config');
 const _cloudWatchListMetrics = Symbol('cloudWatchListMetrics');
 const _metricsPerRegion = Symbol('metricsPerRegion');
+const _dimensionsValidatorPerRegionAndMetric = Symbol('dimensionsValidatorPerRegionAndMetric');
+
+const _dimensionsElementContainsAnother = Symbol('dimensionsElementContainsAnother');
+const _addDimensionsElement = Symbol('addDimensionsElement');
+const _getDimensionsNames = Symbol('getDimensionsNames');
+const _isAValidDimension = Symbol('isAValidDimension');
 
 class MetricsList {
     constructor(config) {
         this[_config] = config;
         this[_metricsPerRegion] = null;
+        this[_dimensionsValidatorPerRegionAndMetric] = null;
     }
 
     buildMetricsPerRegion() {
@@ -34,116 +39,67 @@ class MetricsList {
                     Promise.all(requestsPromises).then( (allRequestsData) => {
                         each(allRequestsData, (requestData, eachCallback) => {
                             if (requestData.data.length > 0) {
-                                if (!this[_metricsPerRegion]) {
-                                    this[_metricsPerRegion] = {};
+                                let metricRegion = requestData.region;
+
+                                if (!this[_dimensionsValidatorPerRegionAndMetric]) {
+                                    this[_dimensionsValidatorPerRegionAndMetric] = {};
                                 }
-                                if (!this[_metricsPerRegion].hasOwnProperty(requestData.region)) {
-                                    this[_metricsPerRegion][requestData.region] = [];
+                                if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
+                                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
                                 }
-                                this[_metricsPerRegion][requestData.region] = this[_metricsPerRegion][requestData.region].concat(requestData.data);
-                            }
-                            eachCallback(null);
-                        }, (err) => {
-                            resolve();
-                        });
-                    });
-                });
-            } else {
-                // TODO - Refactor the black list method or remove if it still takes too long to end
-                let availableAWSRegions = Util.getAWSAvailableRegions();
-                let blacklistedRegions = Object.keys(this[_config].statfulAwsCollector.metricsList);
-                let auxMetricsPerRegion = {};
-                let requestsPromises = [];
 
-                series([
-                    (taskCallback) => {
-                        // Apply blacklist filter to regions
-                        each(availableAWSRegions, (region, callback) => {
-                            if (blacklistedRegions.indexOf(region) === -1) {
-                                auxMetricsPerRegion[region] = [];
-                            }
-                            callback();
-                        }, (err) => {
-                            taskCallback(null);
-                        });
-                    },
-                    (taskCallback) => {
-                        // Get available metrics and filter it by blacklist
-                        eachOf(auxMetricsPerRegion, (metrics, region, eachOfCallback) => {
-                            requestsPromises.push(this[_cloudWatchListMetrics](region, {}));
-                            eachOfCallback(null);
-                        }, (err) => {
-                            taskCallback(null);
-                        });
-                    }
-                ],
-                (err, results) => {
-                    console.log(requestsPromises.length);
-                    Promise.all(requestsPromises).then( (allRequestsData) => {
-                        each(allRequestsData, (requestData, eachCallback) => {
-                            if (requestData.data.length > 0) {
-                                let metricsToFilterByBlacklist = requestData.data;
-                                let region = requestData.region;
-
-                                filter(metricsToFilterByBlacklist, (metric, filterCallback) => {
-                                    // Test if metric is to filter
-                                    let includeMetricInResults = true;
-                                    let blacklistedMetricsForCurrentRegion = this[_config].statfulAwsCollector.metricsList[region];
-
-                                    if (blacklistedMetricsForCurrentRegion && blacklistedMetricsForCurrentRegion.length > 0) {
-                                        each(blacklistedMetricsForCurrentRegion, (blackListedMetric, eachCallback) => {
-                                            // Test for name and namespace
-                                            if ((metric.MetricName && blackListedMetric.MetricName && metric.MetricName === blackListedMetric.MetricName) ||
-                                                (metric.Namespace && blackListedMetric.Namespace && metric.Namespace === blackListedMetric.Namespace)) {
-                                                includeMetricInResults = false;
-                                            }
-
-                                            if (includeMetricInResults) {
-                                                // Test by dimensions and remove blacklisted dimensions
-                                                let dimensionsToRemove = [];
-                                                for (let i = 0; i < metric.Dimensions; i++) {
-                                                    for (let j = 0; j < blackListedMetric.Dimensions; j++) {
-                                                        let metricDimension = metric.Dimensions[i];
-                                                        let blackListedMetricDimension = blackListedMetric.Dimensions[j];
-
-                                                        if (blackListedMetricDimension.Name && blackListedMetricDimension.Value) {
-                                                            if (metricDimension.Name === blackListedMetricDimension.Name &&
-                                                                metricDimension.Value === blackListedMetricDimension.Value) {
-                                                                // Remove metric.Dimensions[i]
-                                                                dimensionsToRemove.push(i);
-                                                            }
-                                                        } else {
-                                                            if (metricDimension.Name && blackListedMetricDimension.Name && metricDimension.Name === blackListedMetricDimension.Name) {
-                                                                // Remove metric.Dimensions[i]
-                                                                dimensionsToRemove.push(i);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-
-                                                // Remove found blacklisted dimensions
-                                                for (let i = dimensionsToRemove.length - 1; i >= 0; i--) {
-                                                    metric.Dimensions.splice(dimensionsToRemove[i], 1);
-                                                }
-                                            }
-
-                                            eachCallback(null);
-                                        }, (err) => {
-                                            filterCallback(null, includeMetricInResults);
-                                        });
-                                    } else {
-                                        filterCallback(null, includeMetricInResults);
+                                // Process dimensions information
+                                each(requestData.data, (metric, eachMetricCallback) => {
+                                    if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
+                                        this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
                                     }
-                                }, (err, filteredMetrics) => {
-                                    if (filteredMetrics && filteredMetrics.length > 0) {
-                                        auxMetricsPerRegion[region] = auxMetricsPerRegion[region].concat(filteredMetrics);
-                                    }
+
+                                    let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                                    let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
+
+                                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
+
+                                    eachMetricCallback(null);
+                                }, (err) => {
+                                    eachCallback(null);
                                 });
+                            } else {
+                                eachCallback(null);
                             }
-                            eachCallback(null);
                         }, (err) => {
-                            this[_metricsPerRegion] =  auxMetricsPerRegion;
-                            resolve();
+                            let auxMetricsPerRegion = {};
+
+                            each(allRequestsData, (requestData, eachCallback) => {
+                                if (requestData.data.length > 0) {
+                                    let metricRegion = requestData.region;
+                                    let validMetrics = [];
+
+                                    if (!auxMetricsPerRegion.hasOwnProperty(metricRegion)) {
+                                        auxMetricsPerRegion[metricRegion] = [];
+                                    }
+
+                                    // Validate dimensions to use
+                                    each(requestData.data, (metric, eachMetricCallback) => {
+                                        let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                                        let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
+
+                                        if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
+                                            validMetrics.push(metric);
+                                        }
+
+                                        eachMetricCallback(null);
+
+                                    }, (err) => {
+                                        auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
+                                        eachCallback(null);
+                                    });
+                                } else {
+                                    eachCallback(null);
+                                }
+                            }, (err) => {
+                                this[_metricsPerRegion] = auxMetricsPerRegion;
+                                resolve();
+                            });
                         });
                     });
                 });
@@ -221,6 +177,67 @@ class MetricsList {
                 resolve(this[_metricsPerRegion]);
             }
         });
+    }
+
+
+    [_dimensionsElementContainsAnother](dimElem, anotherDimElem) {
+        let contains = true;
+        for (var i=0; i<anotherDimElem.length; i++) {
+            if (dimElem.indexOf(anotherDimElem[i]) === -1) {
+                contains = false;
+                break;
+            }
+        }
+        return contains;
+    }
+
+    [_addDimensionsElement](dimensionsToInsert, validDimensions) {
+        let newValidDimensions = [];
+        let wasNewDimensionAlreadyInserted = false;
+
+        for (let i = 0; i<validDimensions.length; i++) {
+            let oldDimensionsElement = validDimensions[i];
+
+            if (this[_dimensionsElementContainsAnother](dimensionsToInsert, oldDimensionsElement)) {
+                if (!wasNewDimensionAlreadyInserted) {
+                    wasNewDimensionAlreadyInserted = true;
+                    newValidDimensions.push(dimensionsToInsert);
+                }
+            } else {
+                if (this[_dimensionsElementContainsAnother](oldDimensionsElement, dimensionsToInsert)) {
+                    wasNewDimensionAlreadyInserted = true;
+                }
+                newValidDimensions.push(oldDimensionsElement);
+            }
+        }
+
+        if (!wasNewDimensionAlreadyInserted) {
+            newValidDimensions.push(dimensionsToInsert);
+        }
+        return newValidDimensions;
+    }
+
+    [_getDimensionsNames](dimensions) {
+        var dimensionsNames = [];
+
+        for (let i=0; i<dimensions.length; i++) {
+            dimensionsNames.push(dimensions[i].Name);
+        }
+
+        return dimensionsNames;
+    }
+
+    [_isAValidDimension](validDimensions, dimension) {
+        let valid = false;
+
+        for (let i=0; i<validDimensions.length; i++) {
+            if (validDimensions[i].length !== dimension.length) {
+                break;
+            }
+
+            valid = this[_dimensionsElementContainsAnother](validDimensions[i], dimension);
+        }
+        return valid;
     }
 }
 

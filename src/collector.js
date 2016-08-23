@@ -3,6 +3,7 @@ import {Util} from './util';
 import Logger from './logger';
 import whilst from 'async/whilst';
 import queue from 'async/queue';
+import StatfulClient from 'statful-client';
 import Request from './request';
 import MetricsList from './metrics-list';
 
@@ -18,6 +19,7 @@ const _metricsList = Symbol('metricsList');
 const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
 const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
 const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
+const _statfulClient = Symbol('statfulClient');
 
 class Collector {
     constructor(config) {
@@ -31,6 +33,7 @@ class Collector {
         this[_utcTimeToStopProcessingRequests] = -1;
         this[_isProcessingRequest] = false;
         this[_metricsList] = new MetricsList(this[_config]);
+        this[_statfulClient] = new StatfulClient(this[_config].statfulClient, this.log);
     }
 
     start() {
@@ -126,7 +129,7 @@ class Collector {
 
             this[_metricsList].getMetricsPerRegion().then( (metricsPerRegion) => {
                 console.log('request spawned');
-                this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime));
+                this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime, this[_statfulClient]));
             });
         }
         // Scheduler to try to spawn another request

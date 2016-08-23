@@ -25,14 +25,14 @@
   },
   "bunyan": {
     "name": "statfulAwsCollector",
+    "level": "debug",
     "streams": []
   },
   "statfulClient": {
     "transport": "api",
     "api": {
-      "token": "@YOUR_API_TOKEN"
+      "token": "@API_TOKEN"
     },
-    "app": "statful-aws-collector",
-    "flushInterval": 30000
+    "app": "statful-aws-collector"
   }
 }
