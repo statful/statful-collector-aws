@@ -32,7 +32,7 @@ export const schema = {
                     properties: {
                         type: {
                             type: 'string',
-                            enum: ['white', 'black']
+                            enum: ['white']
                         },
                         metricsPerRegion: {
                             type: 'object',
