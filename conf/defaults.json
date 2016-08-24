@@ -25,7 +25,6 @@
   },
   "bunyan": {
     "name": "statfulAwsCollector",
-    "level": "debug",
     "streams": []
   },
   "statfulClient": {
