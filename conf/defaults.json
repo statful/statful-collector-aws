@@ -1,8 +1,8 @@
 {
   "statfulAwsCollector": {
     "credentials": {
-      "accessKeyId": "ACCESS_KEY_ID",
-      "secretAccessKey": "SECRET_ACCESS_KEY"
+      "accessKeyId": "AKIAJF2YEDN6EAV27ALQ",
+      "secretAccessKey": "kFGnWvr7Mxv1IQPWNnBoYlYeYNkjm7Gcw017Wi6e"
     },
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
@@ -30,7 +30,8 @@
   "statfulClient": {
     "transport": "api",
     "api": {
-      "token": "API_TOKEN"
+      "token": "8002aef6-1870-4fc1-a2cd-4c0a279712a2",
+      "host": "tel-qa.statful.com"
     },
     "app": "statful-aws-collector"
   }

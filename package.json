@@ -8,6 +8,10 @@
   "scripts": {
     "test": "gulp test"
   },
+  "main": "index.js",
+  "bin": {
+    "statful-aws-collector": "./bin/statful-aws-collector"
+  },
   "author": {
     "name": "Tiago Ferreira",
     "email": "tiago.ferreira@mindera.com"
@@ -43,10 +47,12 @@
     "babel-polyfill": "^6.6.1",
     "bluebird": "^3.3.3",
     "bunyan": "^1.8.1",
+    "fs-extra": "^0.30.0",
     "jsonschema": "^1.1.0",
     "lodash": "^4.15.0",
     "source-map-support": "^0.4.0",
-    "statful-client": "~4.1.0"
+    "statful-client": "~4.1.0",
+    "yargs": "^5.0.0"
   },
   "repository": {
     "type": "git",

@@ -20,13 +20,14 @@ const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
 const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
 const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
 const _statfulClient = Symbol('statfulClient');
+const _handleSignalsAndUncaughtException = Symbol('handleSignalsAndUncaughtException');
 
 class Collector {
     constructor(config) {
         this[_config] = config;
         this.isStopping = false;
         this.started = false;
-        this.log = Logger.sharedInstance().child({file: Util.getCurrentFile(module)}, true);
+        this.log = Logger.sharedInstance(this[_config]).child({file: Util.getCurrentFile(module)}, true);
         this[_requests] = queue((request, callback) => {
             this[_processRequest](request, callback);
         }, 3);
@@ -50,6 +51,7 @@ class Collector {
                 let startPromises = [this[_startCollecting](), this[_startMetricsListUpdate]()];
                 Promise.all(startPromises).then( () => {
                     this.log.info('Collector was started.');
+                    this[_handleSignalsAndUncaughtException]();
                     resolve();
                 });
 
@@ -93,6 +95,19 @@ class Collector {
                 this.log.info('Collector has been already stopped.');
                 resolve();
             }
+        });
+    }
+
+    [_handleSignalsAndUncaughtException]() {
+        process.on('uncaughtException', (err) => {
+            this.log.error(err);
+            this.stop();
+        });
+
+        this[_config].statfulAwsCollector.signals.forEach( (signal) => {
+            process.on(signal, () => {
+                this.stop(signal);
+            });
         });
     }
 
