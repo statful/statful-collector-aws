@@ -10,10 +10,9 @@ class Logger {
             throw 'Cannot construct singleton.';
         }
 
-        return bunyan.createLogger({
-                name: config.bunyan.name,
-                streams: this[_getBunyanStreams](config.bunyan.streams)
-            });
+        config.bunyan.streams = this[_getBunyanStreams](config.bunyan);
+
+        return bunyan.createLogger(config.bunyan);
     }
 
     static sharedInstance(config) {
@@ -28,18 +27,13 @@ class Logger {
         return this[_instance];
     }
 
-    load() {
-        return new Promise( (resolve) => {
-            this[_processConfig]().then(function(config){
-                resolve(config);
-            });
-        });
-    }
-
-    [_getBunyanStreams](streams) {
+    [_getBunyanStreams](bunyanConfig) {
+        console.log(bunyanConfig);
+        let streams = bunyanConfig.streams;
+        let streamsLevel = bunyanConfig.level ? bunyanConfig.level : 'info';
         if (streams.length === 0) {
             streams.push({
-                level: 'debug',
+                level: streamsLevel,
                 stream: process.stdout
             });
         }

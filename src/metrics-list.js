@@ -5,15 +5,15 @@ import doWhilst from 'async/doWhilst';
 import AWS from 'aws-sdk';
 import {Util} from './util';
 
+const _addDimensionsElement = Symbol('addDimensionsElement');
 const _config = Symbol('config');
 const _cloudWatchListMetrics = Symbol('cloudWatchListMetrics');
-const _metricsPerRegion = Symbol('metricsPerRegion');
-const _dimensionsValidatorPerRegionAndMetric = Symbol('dimensionsValidatorPerRegionAndMetric');
-
 const _dimensionsElementContainsAnother = Symbol('dimensionsElementContainsAnother');
-const _addDimensionsElement = Symbol('addDimensionsElement');
+const _dimensionsValidatorPerRegionAndMetric = Symbol('dimensionsValidatorPerRegionAndMetric');
 const _getDimensionsNames = Symbol('getDimensionsNames');
 const _isAValidDimension = Symbol('isAValidDimension');
+const _metricsPerRegion = Symbol('metricsPerRegion');
+const _processReceivedRequestsData = Symbol('processReceivedRequestsData');
 
 class MetricsList {
     constructor(config) {
@@ -28,87 +28,69 @@ class MetricsList {
                 let whiteListConfig = this[_config].statfulAwsCollector.metricsList.metricsPerRegion;
                 let requestsPromises = [];
 
-                eachOf(whiteListConfig, (metrics, region, eachOfCallback) => {
-                    each(metrics, (metric, eachCallback) => {
-                        requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
-                        eachCallback(null);
-                    }, (err) => {
-                        eachOfCallback(null);
-                    });
-                }, (err) => {
-                    Promise.all(requestsPromises).then( (allRequestsData) => {
-                        each(allRequestsData, (requestData, eachCallback) => {
-                            if (requestData.data.length > 0) {
-                                let metricRegion = requestData.region;
-
-                                if (!this[_dimensionsValidatorPerRegionAndMetric]) {
-                                    this[_dimensionsValidatorPerRegionAndMetric] = {};
-                                }
-                                if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
-                                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
-                                }
-
-                                // Process dimensions information
-                                each(requestData.data, (metric, eachMetricCallback) => {
-                                    if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
-                                        this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
-                                    }
-
-                                    let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
-                                    let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
-
-                                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
-
-                                    eachMetricCallback(null);
-                                }, (err) => {
-                                    eachCallback(null);
-                                });
-                            } else {
+                eachOf(whiteListConfig,
+                    (metrics, region, eachOfCallback) => {
+                        each(metrics,
+                            (metric, eachCallback) => {
+                                requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
                                 eachCallback(null);
+                            },
+                            () => {
+                                eachOfCallback(null);
                             }
-                        }, (err) => {
-                            let auxMetricsPerRegion = {};
-
-                            each(allRequestsData, (requestData, eachCallback) => {
-                                if (requestData.data.length > 0) {
-                                    let metricRegion = requestData.region;
-                                    let validMetrics = [];
-
-                                    if (!auxMetricsPerRegion.hasOwnProperty(metricRegion)) {
-                                        auxMetricsPerRegion[metricRegion] = [];
-                                    }
-
-                                    // Validate dimensions to use
-                                    each(requestData.data, (metric, eachMetricCallback) => {
-                                        let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
-                                        let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
-
-                                        if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
-                                            validMetrics.push(metric);
-                                        }
-
-                                        eachMetricCallback(null);
-
-                                    }, (err) => {
-                                        auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
-                                        eachCallback(null);
-                                    });
-                                } else {
-                                    eachCallback(null);
-                                }
-                            }, (err) => {
-                                this[_metricsPerRegion] = auxMetricsPerRegion;
-                                resolve();
-                            });
+                        );
+                    },
+                    () => {
+                        Promise.all(requestsPromises).then( (allRequestsData) => {
+                            this[_processReceivedRequestsData](allRequestsData, resolve);
                         });
-                    });
-                });
+                    }
+                );
             }
         });
     }
 
     clearMetricsPerRegion() {
         this[_metricsPerRegion] = null;
+    }
+
+    getMetricsPerRegion() {
+        return new Promise( (resolve) => {
+            if (!this[_metricsPerRegion]) {
+                this.buildMetricsPerRegion().then( () => {
+                    resolve(this[_metricsPerRegion]);
+                });
+            } else {
+                resolve(this[_metricsPerRegion]);
+            }
+        });
+    }
+
+    [_addDimensionsElement](dimensionsToInsert, validDimensions) {
+        let newValidDimensions = [];
+        let wasNewDimensionAlreadyInserted = false;
+
+        for (let i = 0; i<validDimensions.length; i++) {
+            let oldDimensionsElement = validDimensions[i];
+
+            if (this[_dimensionsElementContainsAnother](dimensionsToInsert, oldDimensionsElement)) {
+                if (!wasNewDimensionAlreadyInserted) {
+                    wasNewDimensionAlreadyInserted = true;
+                    newValidDimensions.push(dimensionsToInsert);
+                }
+            } else {
+                if (this[_dimensionsElementContainsAnother](oldDimensionsElement, dimensionsToInsert)) {
+                    wasNewDimensionAlreadyInserted = true;
+                }
+                newValidDimensions.push(oldDimensionsElement);
+            }
+        }
+
+        if (!wasNewDimensionAlreadyInserted) {
+            newValidDimensions.push(dimensionsToInsert);
+        }
+
+        return newValidDimensions;
     }
 
     [_cloudWatchListMetrics](region, reqParams) {
@@ -139,14 +121,12 @@ class MetricsList {
                         cloudWatch.listMetrics(request, (err, data) => {
                             if (data && data.Metrics && data.Metrics.length > 0) {
                                 receivedData = receivedData.concat(data.Metrics);
-                                console.log('received metrics list with data');
                             }
 
                             if (data && data.NextToken) {
                                 reqParamsCopy.NextToken = data.NextToken;
                                 pendingRequests.push(reqParamsCopy);
                                 requestedRequests++;
-                                console.log('received metrics list with next token');
                             }
 
                             completedRequests++;
@@ -159,62 +139,24 @@ class MetricsList {
                 () => {
                     return (pendingRequests.length > 0 || requestedRequests > completedRequests);
                 },
-                (err) => {
+                () => {
                     resolve({region: region, data:receivedData});
                 }
             );
         });
     }
 
-    getMetricsPerRegion() {
-        return new Promise( (resolve) => {
-            if (!this[_metricsPerRegion]) {
-                this.buildMetricsPerRegion().then( () => {
-                    console.log("MUHA: " + Object.keys(this[_metricsPerRegion]));
-                    resolve(this[_metricsPerRegion]);
-                });
-            } else {
-                resolve(this[_metricsPerRegion]);
-            }
-        });
-    }
-
-
     [_dimensionsElementContainsAnother](dimElem, anotherDimElem) {
         let contains = true;
+
         for (var i=0; i<anotherDimElem.length; i++) {
             if (dimElem.indexOf(anotherDimElem[i]) === -1) {
                 contains = false;
                 break;
             }
         }
+
         return contains;
-    }
-
-    [_addDimensionsElement](dimensionsToInsert, validDimensions) {
-        let newValidDimensions = [];
-        let wasNewDimensionAlreadyInserted = false;
-
-        for (let i = 0; i<validDimensions.length; i++) {
-            let oldDimensionsElement = validDimensions[i];
-
-            if (this[_dimensionsElementContainsAnother](dimensionsToInsert, oldDimensionsElement)) {
-                if (!wasNewDimensionAlreadyInserted) {
-                    wasNewDimensionAlreadyInserted = true;
-                    newValidDimensions.push(dimensionsToInsert);
-                }
-            } else {
-                if (this[_dimensionsElementContainsAnother](oldDimensionsElement, dimensionsToInsert)) {
-                    wasNewDimensionAlreadyInserted = true;
-                }
-                newValidDimensions.push(oldDimensionsElement);
-            }
-        }
-
-        if (!wasNewDimensionAlreadyInserted) {
-            newValidDimensions.push(dimensionsToInsert);
-        }
-        return newValidDimensions;
     }
 
     [_getDimensionsNames](dimensions) {
@@ -234,10 +176,88 @@ class MetricsList {
             if (validDimensions[i].length !== dimension.length) {
                 break;
             }
-
             valid = this[_dimensionsElementContainsAnother](validDimensions[i], dimension);
         }
         return valid;
+    }
+
+    [_processReceivedRequestsData](requestsData, resolve) {
+        each(requestsData,
+            (requestData, eachCallback) => {
+                if (requestData.data.length > 0) {
+                    let metricRegion = requestData.region;
+
+                    if (!this[_dimensionsValidatorPerRegionAndMetric]) {
+                        this[_dimensionsValidatorPerRegionAndMetric] = {};
+                    }
+                    if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
+                        this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
+                    }
+
+                    // Process dimensions information
+                    each(requestData.data,
+                        (metric, eachMetricCallback) => {
+                            if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
+                                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
+                            }
+
+                            let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                            let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
+
+                            this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] =
+                                this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
+
+                            eachMetricCallback(null);
+                        },
+                        () => {
+                            eachCallback(null);
+                        }
+                    );
+                } else {
+                    eachCallback(null);
+                }
+            },
+            () => {
+                let auxMetricsPerRegion = {};
+
+                each(requestsData,
+                    (requestData, eachCallback) => {
+                        if (requestData.data.length > 0) {
+                            let metricRegion = requestData.region;
+                            let validMetrics = [];
+
+                            if (!auxMetricsPerRegion.hasOwnProperty(metricRegion)) {
+                                auxMetricsPerRegion[metricRegion] = [];
+                            }
+
+                            // Validate dimensions to use with generated dimensions information
+                            each(requestData.data,
+                                (metric, eachMetricCallback) => {
+                                    let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                                    let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
+
+                                    if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
+                                        validMetrics.push(metric);
+                                    }
+
+                                    eachMetricCallback(null);
+                                },
+                                () => {
+                                    auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
+                                    eachCallback(null);
+                                }
+                            );
+                        } else {
+                            eachCallback(null);
+                        }
+                    },
+                    () => {
+                        this[_metricsPerRegion] = auxMetricsPerRegion;
+                        resolve();
+                    }
+                );
+            }
+        );
     }
 }
 

@@ -13,23 +13,27 @@ class Config {
     }
 
     load() {
-        return new Promise( (resolve) => {
-            this[_processConfig]().then(function(config){
-                resolve(config);
-            });
+        return new Promise( (resolve, reject) => {
+            this[_processConfig]().then(
+                (config) => {
+                    resolve(config);
+                },
+                (error) => {
+                    reject(error);
+                }
+            );
         });
     }
 
     [_processConfig]() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             let config;
 
             if (this[_file]) {
                 try {
                     config = require(path.resolve(this[_file]));
                 } catch (ex) {
-                    console.error('Failed to load config file ' + this[_file] + ' with: ' + ex);
-                    process.exit(1);
+                    reject('Failed to load config file ' + this[_file] + ' with: ' + ex);
                 }
             } else {
                 config = defaultConfig;
@@ -38,8 +42,7 @@ class Config {
             try {
                 validate(config, schema, {throwError: true});
             } catch (ex) {
-                console.error('Failed to validate config with: ' + ex);
-                process.exit(1);
+                reject('Failed to validate config with: ' + ex);
             }
 
             resolve(config);

@@ -1,9 +1,10 @@
 {
-  "name": "aws-collector",
+  "name": "statful-aws-collector",
   "version": "1.0.0",
   "description": "AWS Cloudwatch collector for Statful",
   "engines": {
-    "node": "*"
+    "node": ">=4.0.0",
+    "npm": ">=3.8.0"
   },
   "scripts": {
     "test": "gulp test"

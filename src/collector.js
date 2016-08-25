@@ -8,19 +8,19 @@ import Request from './request';
 import MetricsList from './metrics-list';
 
 const _config = Symbol('config');
+const _handleSignalsAndUncaughtException = Symbol('handleSignalsAndUncaughtException');
 const _isProcessingRequest = Symbol('isProcessingRequest');
+const _metricsList = Symbol('metricsList');
+const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
 const _processRequest = Symbol('processRequest') ;
 const _requests = Symbol('requests');
 const _spawnRequest = Symbol('spawnRequest');
-const _startCollecting = Symbol('startCollecting');
-const _stopCollecting = Symbol('stopCollecting');
-const _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
-const _metricsList = Symbol('metricsList');
-const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
-const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
-const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
 const _statfulClient = Symbol('statfulClient');
-const _handleSignalsAndUncaughtException = Symbol('handleSignalsAndUncaughtException');
+const _startCollecting = Symbol('startCollecting');
+const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
+const _stopCollecting = Symbol('stopCollecting');
+const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
+const _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
 
 class Collector {
     constructor(config) {
@@ -115,15 +115,13 @@ class Collector {
         if (request instanceof Request) {
             let requestEndTimeUTC = new Date(request.endTime).getTime();
             if (this[_utcTimeToStopProcessingRequests] === -1 || requestEndTimeUTC <= this[_utcTimeToStopProcessingRequests]) {
-                console.log('start processing request');
-                console.log(this[_requests].length());
+                this.log.debug('Start processing a request. Requests queue still have: ' + this[_requests].length() + ' requests.');
 
                 this[_isProcessingRequest]++;
 
                 request.execute().then(() => {
                     this[_isProcessingRequest]--;
-                    console.log('request processed');
-                    console.log(this[_requests].length());
+                    this.log.debug('Request processing ends. Requests queue still have: ' + this[_requests].length() + ' requests.');
                     callback();
                 });
             } else {
@@ -143,8 +141,8 @@ class Collector {
             let endTime = now.toISOString();
 
             this[_metricsList].getMetricsPerRegion().then( (metricsPerRegion) => {
-                console.log('request spawned');
                 this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime, this[_statfulClient]));
+                this.log.debug('A new request was spawned. Requests queue now have: ' + this[_requests].length() + ' requests');
             });
         }
         // Scheduler to try to spawn another request
@@ -172,6 +170,16 @@ class Collector {
         });
     }
 
+    [_startMetricsListUpdate]() {
+        return new Promise( (resolve) => {
+            this[_metricsListUpdateInterval] = setInterval( () => {
+                this.log.debug('Metrics list update was requested.');
+                this[_metricsList].buildMetricsPerRegion();
+            }, Util.getMetricListUpdateTime() * 1000);
+            resolve();
+        });
+    }
+
     [_stopCollecting]() {
         this[_utcTimeToStopProcessingRequests] = new Date().getTime();
 
@@ -189,16 +197,6 @@ class Collector {
                     resolve();
                 }
             );
-        });
-    }
-
-    [_startMetricsListUpdate]() {
-        return new Promise( (resolve) => {
-            this[_metricsListUpdateInterval] = setInterval( () => {
-                console.log('requested metrics list update');
-                this[_metricsList].buildMetricsPerRegion();
-            }, Util.getMetricListUpdateTime() * 1000);
-            resolve();
         });
     }
 
