@@ -61,6 +61,7 @@
   },
   "keywords": [
     "aws",
+    "cloudwatch",
     "collector",
     "statful",
     "metrics"
