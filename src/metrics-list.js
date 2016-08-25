@@ -13,6 +13,8 @@ const _dimensionsValidatorPerRegionAndMetric = Symbol('dimensionsValidatorPerReg
 const _getDimensionsNames = Symbol('getDimensionsNames');
 const _isAValidDimension = Symbol('isAValidDimension');
 const _metricsPerRegion = Symbol('metricsPerRegion');
+const _parseValidDimensionsFromRequestData = Symbol('parseValidDimensionsFromRequestData');
+const _parseValidMetricsWithDimensionsValidatorFromRequestsData = Symbol('parseValidMetricsWithDimensionsValidatorFromRequestsData');
 const _processReceivedRequestsData = Symbol('processReceivedRequestsData');
 
 class MetricsList {
@@ -181,35 +183,64 @@ class MetricsList {
         return valid;
     }
 
-    [_processReceivedRequestsData](requestsData, resolve) {
+    [_parseValidDimensionsFromRequestData](requestData, parseCallback) {
+        let metricRegion = requestData.region;
+
+        if (!this[_dimensionsValidatorPerRegionAndMetric]) {
+            this[_dimensionsValidatorPerRegionAndMetric] = {};
+        }
+        if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
+            this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
+        }
+
+        // Process dimensions information
+        each(requestData.data,
+            (metric, eachMetricCallback) => {
+                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
+                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
+                }
+
+                let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
+
+                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] =
+                    this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
+
+                eachMetricCallback(null);
+            },
+            () => {
+                parseCallback(null);
+            }
+        );
+    }
+
+    [_parseValidMetricsWithDimensionsValidatorFromRequestsData](requestsData, resolve) {
+        let auxMetricsPerRegion = {};
+
         each(requestsData,
             (requestData, eachCallback) => {
                 if (requestData.data.length > 0) {
                     let metricRegion = requestData.region;
+                    let validMetrics = [];
 
-                    if (!this[_dimensionsValidatorPerRegionAndMetric]) {
-                        this[_dimensionsValidatorPerRegionAndMetric] = {};
-                    }
-                    if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
-                        this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
+                    if (!auxMetricsPerRegion.hasOwnProperty(metricRegion)) {
+                        auxMetricsPerRegion[metricRegion] = [];
                     }
 
-                    // Process dimensions information
+                    // Validate dimensions to use with generated dimensions information
                     each(requestData.data,
                         (metric, eachMetricCallback) => {
-                            if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
-                                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
+                            let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                            let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
+
+                            if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
+                                validMetrics.push(metric);
                             }
-
-                            let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
-                            let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
-
-                            this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] =
-                                this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
 
                             eachMetricCallback(null);
                         },
                         () => {
+                            auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
                             eachCallback(null);
                         }
                     );
@@ -218,44 +249,23 @@ class MetricsList {
                 }
             },
             () => {
-                let auxMetricsPerRegion = {};
+                this[_metricsPerRegion] = auxMetricsPerRegion;
+                resolve();
+            }
+        );
+    }
 
-                each(requestsData,
-                    (requestData, eachCallback) => {
-                        if (requestData.data.length > 0) {
-                            let metricRegion = requestData.region;
-                            let validMetrics = [];
-
-                            if (!auxMetricsPerRegion.hasOwnProperty(metricRegion)) {
-                                auxMetricsPerRegion[metricRegion] = [];
-                            }
-
-                            // Validate dimensions to use with generated dimensions information
-                            each(requestData.data,
-                                (metric, eachMetricCallback) => {
-                                    let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
-                                    let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
-
-                                    if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
-                                        validMetrics.push(metric);
-                                    }
-
-                                    eachMetricCallback(null);
-                                },
-                                () => {
-                                    auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
-                                    eachCallback(null);
-                                }
-                            );
-                        } else {
-                            eachCallback(null);
-                        }
-                    },
-                    () => {
-                        this[_metricsPerRegion] = auxMetricsPerRegion;
-                        resolve();
-                    }
-                );
+    [_processReceivedRequestsData](requestsData, resolve) {
+        each(requestsData,
+            (requestData, eachCallback) => {
+                if (requestData.data.length > 0) {
+                    this[_parseValidDimensionsFromRequestData](requestData, eachCallback);
+                } else {
+                    eachCallback(null);
+                }
+            },
+            () => {
+                this[_parseValidMetricsWithDimensionsValidatorFromRequestsData](requestsData, resolve);
             }
         );
     }
