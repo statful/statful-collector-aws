@@ -29,13 +29,41 @@ $ npm install -g statful-aws-collector
 
 After installing Statful AWS Collector you are ready to use it. The quickest way is to do the following:
 
+```bash
+$ statful-aws-collector generate-config /etc/statful-aws-collector/conf/
+# Update some info in the statful-aws-collector-conf.json: accessKeyId, secretAccessKey and the statful api token
+$ statful-aws-collector start /etc/statful-aws-collector/conf/statful-aws-collector-conf.json
+```
+
 ## Examples
 
-This is the examples
+You can find here some useful usage examples of the Statful AWS Collector. In the following examples are assumed you have already installed the collector globally.
 
 ## Reference
 
 Detailed reference if you want to take full advantage from Statful AWS Collector.
+
+### CLI
+
+```bash
+$ statful-aws-collector generate-config <path>
+```
+
+Creates a default configuration at the given path. If the given path doesn't exists, it will be created.
+
+```bash
+$ statful-aws-collector start <path>
+```
+
+Starts the collector with the config on given path.
+
+```bash
+$ statful-aws-collector help
+```
+
+Shows a small help for the collector.
+
+### Configuration
 
 ## Authors
 
