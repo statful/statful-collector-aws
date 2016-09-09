@@ -1,0 +1,38 @@
+{
+  "statfulAwsCollector": {
+    "credentials": {
+      "accessKeyId": "ACCESS_KEY_ID",
+      "secretAccessKey": "SECRET_ACCESS_KEY"
+    },
+    "period": 60,
+    "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
+    "metricsList": {
+      "type": "white",
+      "metricsPerRegion": {
+        "us-west-2": [
+          {
+            "Namespace": "AWS/ELB"
+          }
+        ]
+      }
+    },
+    "signals": [
+      "SIGTERM",
+      "SIGINT",
+      "SIGABRT",
+      "SIGUSR2"
+    ]
+  },
+  "bunyan": {
+    "name": "statfulAwsCollector",
+    "level": "debug",
+    "streams": []
+  },
+  "statfulClient": {
+    "transport": "api",
+    "api": {
+      "token": "STATFUL_API_TOKEN"
+    },
+    "app": "statful-aws-collector"
+  }
+}

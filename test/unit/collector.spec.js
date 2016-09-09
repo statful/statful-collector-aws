@@ -1,5 +1,5 @@
 import expect from 'expect';
-//import { classModule } from '../../src';
+import Collector from '../../src/collector';
 
 describe('Module', () => {
     describe('#getModule()', () => {
