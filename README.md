@@ -39,9 +39,123 @@ $ statful-aws-collector start /etc/statful-aws-collector/conf/statful-aws-collec
 
 ## Examples
 
-You can find here some useful usage examples of the Statful AWS Collector. In the following examples are assumed you have already installed the collector globally.
+You can find here some useful usage examples of the Statful AWS Collector. In the following examples are assumed you have already installed the collector globally and followed the [Quick Start](#quick-start).
 
-**TODO**
+### Collect a list of metrics
+
+```json
+{
+  "statfulAwsCollector": {
+    ... ,
+    "period": 60,
+    "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
+    "metricsList": {
+      "type": "white",
+      "metricsPerRegion": {
+        "us-west-2": [
+          {
+            "Namespace": "AWS/ELB"
+          },
+          {
+            "Namespace": "AWS/AutoScaling",
+            "MetricName": "GroupMinSize"
+          },
+          {
+            "Namespace": "AWS/AutoScaling",
+            "MetricName": "GroupMaxSize"
+          },
+          {
+            "Namespace": "AWS/AutoScaling",
+            "MetricName": "GroupStandbyInstances"
+          }
+        ]
+      }
+    },
+    ...
+  },
+  ...
+}
+```
+
+### Collect a metric with different dimensions
+
+```json
+{
+  "statfulAwsCollector": {
+    ... ,
+    "period": 60,
+    "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
+    "metricsList": {
+      "type": "white",
+      "metricsPerRegion": {
+        "us-west-2": [
+          {
+            "Namespace": "AWS/ELB"
+          },
+          {
+            "Namespace": "AWS/Billing",
+            "MetricName": "EstimatedCharges",
+            "Dimensions": [
+            	{
+            		"Name": "ServiceName",
+            		"Value": "Service1"
+            	},
+            	{
+            		"Name": "ServiceName",
+            		"Value": "Service12"
+            	},
+            	{
+            		"Name": "Currency",
+            		"Value": "USD"
+            	},
+            	{
+            		"Name": "Currency",
+            		"Value": "EUR"
+            	}
+            ]
+          }
+        ]
+      }
+    },
+    ...
+  },
+  ...
+}
+```
+
+### Collect metrics from more than one region
+
+```json
+{
+  "statfulAwsCollector": {
+    ... ,
+    "period": 300,
+    "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
+    "metricsList": {
+      "type": "white",
+      "metricsPerRegion": {
+      	"eu-central-1": [
+          {
+            "Namespace": "AWS/Billing"
+          }
+        ],
+      	"us-west-1": [
+          {
+            "Namespace": "AWS/Billing"
+          }
+        ],
+        "us-west-2": [
+          {
+            "Namespace": "AWS/Billing"
+          }
+        ]
+      }
+    },
+    ...
+  },
+  ...
+}
+```
 
 ## Reference
 
@@ -76,10 +190,10 @@ In the configuration file you can find 3 main sections: `statfulAwsCollector`, `
 | Option | Description | Type | Default | Required |
 |:---|:---|:---|:---|:---|
 | _credentials_ | Defines the credentials to access AWS. | `object` | **none** | **YES** |
-| _period_ | Defines the global output level. | `number` | 60 | **YES** |
-| _statistics_ | Define the statistcs for which data should be collected. | `array` | `["SampleCount", "Average", "Sum", "Minimum", "Maximum"]` | **YES** |
-| _metricsList_ | Defines metrics to collect from AWS. Here you should only configure the `metricsPerRegion` which is an object organized by AWS region. Inside each region you should set a list of metrics object to collect. Each metric object supports a `Namespace`, `MetricName` and  `Dimensions`. Please check the AWS documentation ([AWS Metric Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Metric.html) and [Amazon CloudWatch Namespaces, Dimensions, and Metrics Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)) to get more information about the metrics object. | `object` | **none** | **YES** |
-| _signals_ | Defines the proccess signals for which collector should be stopped. | `array` | `["SIGTERM", "SIGINT", "SIGABRT", "SIGUSR2"]` | **YES** |
+| _period_ | Defines the global output level.</br></br> **Valid Periods:** `60, 120, 180, 300` | `number` | 60 | **YES** |
+| _statistics_ | Define the statistcs for which data should be collected.</br></br> **Valid Statistics:** `SampleCount, Average, Sum, Minimum, Maximum` | `array` | `["SampleCount", "Average", "Sum", "Minimum", "Maximum"]` | **YES** |
+| _metricsList_ | Defines metrics to collect from AWS. Here you should only configure the `metricsPerRegion` which is an object organized by AWS region. Inside each region you should set a list of metrics object to collect. Each metric object supports a `Namespace`, `MetricName` and  `Dimensions`.</br> Please check the AWS documentation ([AWS Metric Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Metric.html) and [Amazon CloudWatch Namespaces, Dimensions, and Metrics Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)) and the [Examples](#examples) section to get more information about the metrics object. | `object` | **none** | **YES** |
+| _signals_ | Defines the proccess signals for which collector should be stopped. Any valid NodeJS signal can be added. | `array` | `["SIGTERM", "SIGINT", "SIGABRT", "SIGUSR2"]` | **YES** |
 
 **Bunyan**
 
