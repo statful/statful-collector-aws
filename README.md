@@ -106,7 +106,7 @@ To get more information please read the [Bunyan documentation](https://github.co
 | _namespace_ | Defines the global namespace. | `string` | `application` | **NO** |
 | _sampleRate_ | Defines the rate sampling. **Should be a number between [1, 100]**. | `number` | `100` | **NO** |
 | _tags_ | Defines the global tags. | `object` | `{}` | **NO** |
-| _transport_ | Defines the transport layer to be used to send metrics.<br><br> **Valid Transports:** `udp, api` | `string` | **none** | **YES** |
+| _transport_ | Defines the transport layer to be used to send metrics.</br></br> **Valid Transports:** `udp, api` | `string` | **none** | **YES** |
 | _host_ | Defines the host name to where the metrics should be sent. Can also be set inside _api_. | `string` | `127.0.0.1` | **NO** |
 | _port_ | Defines the port. Can also be set inside _api_. | `string` | `2013` | **NO** |
 | _token_ | Defines the token to be used.  Must be set inside _api_. | `string` | **none** | **NO** |
