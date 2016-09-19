@@ -5,7 +5,7 @@ Staful AWS Collector built in NodeJS. This is intended to collect metrics from A
 
 ## Table of Contents
 
-* [Supported Versions of NodeJS](#supported-versions-of-nodejs)
+* [Supported NodeJS Versions](#supported-nodejs-versions)
 * [Installation](#installation)
 * [Quick Start](#quick-start)
 * [Examples](#examples)
@@ -13,7 +13,7 @@ Staful AWS Collector built in NodeJS. This is intended to collect metrics from A
 * [Authors](#authors)
 * [License](#license)
 
-## Supported Versions of NodeJS
+## Supported NodeJS Versions
 
 | Statful AWS Collector Version | Tested NodeJS versions  |
 |:---|:---|
