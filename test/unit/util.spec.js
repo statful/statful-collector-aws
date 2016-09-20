@@ -29,4 +29,16 @@ describe('Util module tests', () => {
 
         expect(listUpdateTime > 0 && remainder === 0).toBeTruthy();
     });
+
+    it('should index symbols object by name)', () => {
+        let objectWithSymbols = {};
+
+        objectWithSymbols[Symbol('propA')] = 1;
+        objectWithSymbols[Symbol('propB')] = () => { return 2 };
+
+        let objectIndexedSymbols = Util.getObjectIndexedSymbols(objectWithSymbols);
+
+        expect(objectWithSymbols[objectIndexedSymbols.propA]).toBe(1);
+        expect(objectWithSymbols[objectIndexedSymbols.propB]()).toBe(2);
+    });
 });

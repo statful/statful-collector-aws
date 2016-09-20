@@ -11,5 +11,18 @@ export const Util = {
 
     getMetricListUpdateTime: () => {
       return 5 * 60;
+    },
+
+    getObjectIndexedSymbols: (object) => {
+        let indexedSymbols = {};
+        let symbols = Object.getOwnPropertySymbols(object);
+
+        for (var symbol of symbols) {
+            let symbolName = symbol.toString();
+            let indexedSymbolKey = symbolName.slice(7, symbolName.length - 1);
+            indexedSymbols[indexedSymbolKey] = symbol;
+        }
+
+        return indexedSymbols;
     }
 };
