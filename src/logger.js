@@ -28,7 +28,6 @@ class Logger {
     }
 
     [_getBunyanStreams](bunyanConfig) {
-        console.log(bunyanConfig);
         let streams = bunyanConfig.streams;
         let streamsLevel = bunyanConfig.level ? bunyanConfig.level : 'info';
         if (streams.length === 0) {
