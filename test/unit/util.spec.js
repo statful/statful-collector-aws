@@ -41,4 +41,12 @@ describe('Util module tests', () => {
         expect(objectWithSymbols[objectIndexedSymbols.propA]).toBe(1);
         expect(objectWithSymbols[objectIndexedSymbols.propB]()).toBe(2);
     });
+
+    it('should return empty index symbols object', () => {
+        let objectWithSymbols = undefined;
+
+        let objectIndexedSymbols = Util.getObjectIndexedSymbols(objectWithSymbols);
+
+        expect(objectIndexedSymbols).toEqual({});
+    });
 });

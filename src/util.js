@@ -15,12 +15,15 @@ export const Util = {
 
     getObjectIndexedSymbols: (object) => {
         let indexedSymbols = {};
-        let symbols = Object.getOwnPropertySymbols(object);
 
-        for (var symbol of symbols) {
-            let symbolName = symbol.toString();
-            let indexedSymbolKey = symbolName.slice(7, symbolName.length - 1);
-            indexedSymbols[indexedSymbolKey] = symbol;
+        if (object) {
+            let symbols = Object.getOwnPropertySymbols(object);
+
+            for (var symbol of symbols) {
+                let symbolName = symbol.toString();
+                let indexedSymbolKey = symbolName.slice(7, symbolName.length - 1);
+                indexedSymbols[indexedSymbolKey] = symbol;
+            }
         }
 
         return indexedSymbols;

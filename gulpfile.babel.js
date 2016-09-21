@@ -67,11 +67,6 @@ gulp.task('eslint', () => {
     .pipe(eslint.failAfterError());
 });
 
-gulp.task('unit-tests', () => {
-    return gulp.src(testGlob)
-        .pipe(jasmine());
-});
-
 gulp.task('coverage', (done) => {
     gulp.src([srcGlob])
         .pipe(plumber())
@@ -92,7 +87,7 @@ gulp.task('coverage', (done) => {
         });
 });
 
-gulp.task('test', ['clean-coverage', 'eslint', 'unit-tests', 'coverage']);
+gulp.task('test', ['clean-coverage', 'eslint', 'coverage']);
 
 gulp.task('build', ['build-raw', 'test']);
 
