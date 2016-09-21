@@ -30,7 +30,7 @@ describe('Util module tests', () => {
         expect(listUpdateTime > 0 && remainder === 0).toBeTruthy();
     });
 
-    it('should index symbols object by name)', () => {
+    it('should index symbols object by name', () => {
         let objectWithSymbols = {};
 
         objectWithSymbols[Symbol('propA')] = 1;

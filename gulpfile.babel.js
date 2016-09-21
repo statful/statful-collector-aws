@@ -1,15 +1,19 @@
 import _gulp from 'gulp';
+import jasmine from 'gulp-jasmine';
 import gulpHelp from 'gulp-help';
 import babel from 'gulp-babel';
 import eslint from 'gulp-eslint';
 import del from 'del';
 import path from 'path';
 import nodemon from 'gulp-nodemon';
-import mocha from 'gulp-spawn-mocha';
 import plumber from 'gulp-plumber';
+import istanbul from 'gulp-istanbul';
+import { Instrumenter } from 'isparta';
 import sourcemaps from 'gulp-sourcemaps';
 import colors from 'colors';
 import watch from 'gulp-watch';
+
+
 
 const gulp = gulpHelp(_gulp);
 const src = 'src',
@@ -30,12 +34,19 @@ const src = 'src',
     testPath = path.resolve(test),
     testExtension = 'spec.js',
     testGlob = testPath + '/**/*.' + testExtension,
+    coverage = 'coverage',
+    coveragePath = path.resolve(coverage),
+    coverageGlob = coveragePath,
     entryFile    = 'app.js';
 
 gulp.task('default', ['dev']);
 
-gulp.task('clean' , () => {
+gulp.task('clean-lib' , () => {
     return del(libGlob, () => {});
+});
+
+gulp.task('clean-coverage' , () => {
+    return del(coverageGlob, () => {});
 });
 
 gulp.task('compile', () => {
@@ -47,7 +58,7 @@ gulp.task('compile', () => {
     .pipe(gulp.dest(libPath));
 });
 
-gulp.task('build-raw', ['clean', 'compile']);
+gulp.task('build-raw', ['clean-lib', 'compile']);
 
 gulp.task('eslint', () => {
     return gulp.src([srcGlob, confSrcGlob])
@@ -58,13 +69,30 @@ gulp.task('eslint', () => {
 
 gulp.task('unit-tests', () => {
     return gulp.src(testGlob)
-        .pipe(mocha({
-            compilers: 'js:babel-register',
-            require: 'babel-polyfill'
-        }));
+        .pipe(jasmine());
 });
 
-gulp.task('test', ['eslint', 'unit-tests']);
+gulp.task('coverage', (done) => {
+    gulp.src([srcGlob])
+        .pipe(plumber())
+        .pipe(istanbul({
+            instrumenter: Instrumenter,
+            includeUntested: true
+        }))
+        .pipe(istanbul.hookRequire())
+        .on('finish', () => {
+            return gulp.src([testGlob])
+                .pipe(plumber())
+                .pipe(jasmine())
+                .pipe(istanbul.writeReports({}))
+                .pipe(istanbul.enforceThresholds({
+                    thresholds: { global: 1 }
+                }))
+                .on('end', done);
+        });
+});
+
+gulp.task('test', ['clean-coverage', 'eslint', 'unit-tests', 'coverage']);
 
 gulp.task('build', ['build-raw', 'test']);
 
