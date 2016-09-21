@@ -1,4 +1,3 @@
-import expect from 'expect';
 import Logger from '../../src/logger';
 
 describe('Logger module tests', () => {

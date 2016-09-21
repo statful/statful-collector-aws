@@ -1,4 +1,3 @@
-import expect from 'expect';
 import {Util} from '../../src/util';
 
 describe('Util module tests', () => {
