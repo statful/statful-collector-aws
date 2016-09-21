@@ -7,7 +7,9 @@
     "npm": ">=3.8.0"
   },
   "scripts": {
-    "test": "gulp test"
+    "build": "node_modules/.bin/gulp build",
+    "test": "node_modules/.bin/gulp test",
+    "prepublish": "npm run build"
   },
   "main": "index.js",
   "bin": {
