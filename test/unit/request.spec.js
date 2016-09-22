@@ -1,12 +1,60 @@
-import * as AWS from 'aws-sdk';
-import Request from '../../src/request'
+let proxyquire =  require('proxyquire');
+let Request = proxyquire('../../src/request', {
+    'aws-sdk': {
+        CloudWatch: function () {
+            this.getMetricStatistics = function (reqParams, callback) {
+                let requestCountData = {
+                    ResponseMetadata: {RequestId: '86a10c1e-80eb-11e6-aede-4f118cb5732e'},
+                    Label: 'RequestCount',
+                    Datapoints: [
+                        {
+                            Timestamp: '2014-09-03T23:00:00Z',
+                            SampleCount: 1,
+                            Average: 1,
+                            Sum: 1,
+                            Minimum: 1,
+                            Maximum: 1,
+                            Unit: 'Count'
+                        }
+                    ]
+                };
+
+                let healthyHostCountData = {
+                    ResponseMetadata: {RequestId: '86a2938b-80eb-11e6-b4ca-cd7cbce3c3a4'},
+                    Label: 'HealthyHostCount',
+                    Datapoints: [
+                        {
+                            Timestamp: '2014-09-03T23:00:00Z',
+                            SampleCount: 6,
+                            Average: 1,
+                            Sum: 6,
+                            Minimum: 1,
+                            Maximum: 1,
+                            Unit: 'Count'
+                        }
+                    ]
+                };
+
+                if (reqParams.MetricName === 'RequestCount') {
+                    callback(null, requestCountData);
+                } else {
+                    callback(null, healthyHostCountData);
+                }
+            }
+        }
+    }
+}).default;
 
 describe('Request module tests', () => {
-    let mockedConfig, mockedMetricsPerRegion, mockedStatfulClient, mockedAwsSdk;
+    let mockedConfig, mockedMetricsPerRegion, mockedStatfulClient;
 
     beforeEach( () => {
         mockedConfig = {
             statfulAwsCollector: {
+                credentials: {
+                    accessKeyId: "ACCESS_KEY_ID",
+                    secretAccessKey: "SECRET_ACCESS_KEY"
+                },
                 period: 60,
                 statistics: ['SampleCount', 'Average', 'Sum', 'Minimum', 'Maximum']
             }
@@ -45,62 +93,10 @@ describe('Request module tests', () => {
         };
 
         mockedStatfulClient = {
-            aggregatedPut: (metricName, metricValue, metricAgg, metricAggFreq, options) => {
-                return {
-                    metricName: metricName,
-                    metricValue: metricValue,
-                    metricAgg: metricAgg,
-                    metricAggFreq: metricAggFreq,
-                    options: options
-                }
-            }
+            aggregatedPut: (metricName, metricValue, metricAgg, metricAggFreq, options) => {}
         };
 
-        mockedAwsSdk = {
-            CloudWatch: (initOptions) => {
-
-                    this.getMetricStatistics = (reqParams, callback) => {
-                        let requestCountData = {
-                            ResponseMetadata: { RequestId: '86a10c1e-80eb-11e6-aede-4f118cb5732e' },
-                            Label: 'RequestCount',
-                            Datapoints: [
-                                {
-                                    Timestamp: '2014-09-03T23:00:00Z',
-                                    SampleCount: 1,
-                                    Average: 1,
-                                    Sum: 1,
-                                    Minimum: 1,
-                                    Maximum: 1,
-                                    Unit: 'Count'
-                                }
-                            ]
-                        };
-
-                        let healthyHostCountData = {
-                            ResponseMetadata: { RequestId: '86a2938b-80eb-11e6-b4ca-cd7cbce3c3a4' },
-                            Label: 'HealthyHostCount',
-                            Datapoints: [
-                                {
-                                    Timestamp: '2014-09-03T23:00:00Z',
-                                    SampleCount: 6,
-                                    Average: 1,
-                                    Sum: 6,
-                                    Minimum: 1,
-                                    Maximum: 1,
-                                    Unit: 'Count'
-                                }
-                            ]
-                        };
-
-                        if (reqParams.MetricName === 'RequestCount') {
-                            callback(null, requestCountData);
-                        } else {
-                            callback(null, healthyHostCountData);
-                        }
-                    }
-
-            }
-        };
+        spyOn(mockedStatfulClient, 'aggregatedPut').and.callThrough();
     });
 
     it('should create a request', () => {
@@ -112,10 +108,10 @@ describe('Request module tests', () => {
     it('should execute a request with success sending correctly processed metrics to statful client from aws cloudwatch', (done) => {
         let request = new Request(mockedConfig, mockedMetricsPerRegion, '2014-09-03T23:00:00Z', '2014-09-03T23:01:00Z', mockedStatfulClient);
 
-        spyOn(AWS, 'CloudWatch').and.callFake(mockedAwsSdk.CloudWatch);
-
         request.execute().then(
             () => {
+                console.log(mockedStatfulClient.aggregatedPut.calls.all());
+
                 expect(true).toBe(true);
                 done();
             }
