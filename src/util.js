@@ -19,10 +19,10 @@ export const Util = {
         if (object) {
             let symbols = Object.getOwnPropertySymbols(object);
 
-            for (var symbol of symbols) {
-                let symbolName = symbol.toString();
+            for (let i = 0; i < symbols.length; i++) {
+                let symbolName = symbols[i].toString();
                 let indexedSymbolKey = symbolName.slice(7, symbolName.length - 1);
-                indexedSymbols[indexedSymbolKey] = symbol;
+                indexedSymbols[indexedSymbolKey] = symbols[i];
             }
         }
 
