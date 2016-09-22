@@ -27,6 +27,7 @@ class Request {
         this[_metricsPerRegion] = metricsPerRegion;
         this[_receivedDataPerRegion] = {};
         this[_statfulClient] = statfulClient;
+        console.log(metricsPerRegion);
     }
 
     execute() {

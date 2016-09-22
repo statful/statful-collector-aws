@@ -74,14 +74,6 @@ class Collector {
                 this.started = false;
                 this.isStopping = true;
 
-                // TODO - Remove this commented code
-                /*this[_stopCollecting]().then( () => {
-                    this.isStopping = false;
-                    this.log.info('Collector was stopped.');
-                    resolve();
-                    process.exit(0);
-                });*/
-
                 let stopPromises = [this[_stopCollecting](), this[_stopMetricsListUpdate]()];
                 Promise.all(stopPromises).then( () => {
                     this.isStopping = false;

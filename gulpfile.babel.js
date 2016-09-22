@@ -50,7 +50,7 @@ gulp.task('clean-coverage' , () => {
 });
 
 gulp.task('compile', () => {
-  return gulp.src([srcGlob, confSrcGlob])
+  return gulp.src([srcGlob])
     .pipe(plumber())
     .pipe(sourcemaps.init())
     .pipe(babel())
@@ -61,7 +61,7 @@ gulp.task('compile', () => {
 gulp.task('build-raw', ['clean-lib', 'compile']);
 
 gulp.task('eslint', () => {
-    return gulp.src([srcGlob, confSrcGlob])
+    return gulp.src([srcGlob])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
