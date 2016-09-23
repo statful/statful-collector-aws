@@ -83,7 +83,10 @@ gulp.task('coverage', (done) => {
                 .pipe(istanbul.enforceThresholds({
                     thresholds: { global: 1 }
                 }))
-                .on('end', done);
+                .once('end', () => {
+                    done();
+                    process.exit();
+                });
         });
 });
 

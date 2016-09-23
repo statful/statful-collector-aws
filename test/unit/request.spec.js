@@ -1,48 +1,7 @@
 let proxyquire =  require('proxyquire');
+let ModuleMocks = require('../mocks/module-mocks').ModuleMocks;
 let Request = proxyquire('../../src/request', {
-    'aws-sdk': {
-        CloudWatch: function () {
-            this.getMetricStatistics = function (reqParams, callback) {
-                let requestCountData = {
-                    ResponseMetadata: {RequestId: '86a10c1e-80eb-11e6-aede-4f118cb5732e'},
-                    Label: 'RequestCount',
-                    Datapoints: [
-                        {
-                            Timestamp: '2014-09-03T23:00:00Z',
-                            SampleCount: 1,
-                            Average: 1,
-                            Sum: 1,
-                            Minimum: 1,
-                            Maximum: 1,
-                            Unit: 'Count'
-                        }
-                    ]
-                };
-
-                let healthyHostCountData = {
-                    ResponseMetadata: {RequestId: '86a2938b-80eb-11e6-b4ca-cd7cbce3c3a4'},
-                    Label: 'HealthyHostCount',
-                    Datapoints: [
-                        {
-                            Timestamp: '2014-09-03T23:00:00Z',
-                            SampleCount: 6,
-                            Average: 1,
-                            Sum: 6,
-                            Minimum: 1,
-                            Maximum: 1,
-                            Unit: 'Count'
-                        }
-                    ]
-                };
-
-                if (reqParams.MetricName === 'RequestCount') {
-                    callback(null, requestCountData);
-                } else {
-                    callback(null, healthyHostCountData);
-                }
-            }
-        }
-    }
+    'aws-sdk': ModuleMocks.awsSdk()
 }).default;
 
 describe('Request module tests', () => {

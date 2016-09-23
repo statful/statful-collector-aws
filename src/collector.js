@@ -79,7 +79,6 @@ class Collector {
                     this.isStopping = false;
                     this.log.info('Collector was stopped.');
                     resolve();
-                    process.exit(0);
                 });
 
             } else if (this.isStopping) {
@@ -94,12 +93,16 @@ class Collector {
     [_handleSignalsAndUncaughtException]() {
         process.on('uncaughtException', (err) => {
             this.log.error(err);
-            this.stop();
+            this.stop().then( () => {
+                process.exit(0);
+            });
         });
 
         this[_config].statfulAwsCollector.signals.forEach( (signal) => {
             process.on(signal, () => {
-                this.stop(signal);
+                this.stop(signal).then( () => {
+                    process.exit(0);
+                });
             });
         });
     }
