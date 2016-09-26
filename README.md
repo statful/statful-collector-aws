@@ -1,6 +1,8 @@
 Statful AWS Collector
 ==============
 
+[![NPM version][npm-image]][npm-url] [![Build Status](https://travis-ci.org/statful/statful-aws-collector.svg?branch=master)](https://travis-ci.org/statful/statful-aws-collector)
+
 Staful AWS Collector built in NodeJS. This is intended to collect metrics from AWS CloudWatch and send them to Statful.
 
 ## Table of Contents
