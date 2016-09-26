@@ -16,8 +16,7 @@
     "statful-aws-collector": "./bin/statful-aws-collector"
   },
   "author": {
-    "name": "Tiago Ferreira",
-    "email": "tiago.ferreira@mindera.com"
+    "name": "Mindera - Software Craft"
   },
   "license": "MIT",
   "devDependencies": {
