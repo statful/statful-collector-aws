@@ -1,9 +1,9 @@
-Statful AWS Collector
+Statful Collector AWS
 ==============
 
-[![NPM version][npm-image]][npm-url] [![Build Status](https://travis-ci.org/statful/statful-aws-collector.svg?branch=master)](https://travis-ci.org/statful/statful-aws-collector)
+[![NPM version][npm-image]][npm-url] [![Build Status](https://travis-ci.org/statful/statful-collector-aws.svg?branch=master)](https://travis-ci.org/statful/statful-collector-aws)
 
-Staful AWS Collector built in NodeJS. This is intended to collect metrics from AWS CloudWatch and send them to Statful.
+Staful Collector AWS built in NodeJS. This is intended to collect metrics from AWS CloudWatch and send them to Statful.
 
 ## Table of Contents
 
@@ -17,31 +17,31 @@ Staful AWS Collector built in NodeJS. This is intended to collect metrics from A
 
 ## Supported NodeJS Versions
 
-| Statful AWS Collector Version | Tested NodeJS versions  |
+| Statful Collector AWS Version | Tested NodeJS versions  |
 |:---|:---|
 | 1.x.x | `4` and `Stable` |
 
 ## Installation
 
 ```bash
-$ npm install -g statful-aws-collector
+$ npm install -g statful-collector-aws
 ```
 
 ## Quick start
 
-After installing Statful AWS Collector you are ready to use it. The quickest way is to do the following:
+After installing Statful Collector AWS you are ready to use it. The quickest way is to do the following:
 
 ```bash
-$ statful-aws-collector generate-config /etc/statful-aws-collector/conf/
+$ statful-collector-aws generate-config /etc/statful-collector-aws/conf/
 
-# Update some info in the statful-aws-collector-conf.json: accessKeyId, secretAccessKey and the statful api token
+# Update some info in the statful-collector-aws-conf.json: accessKeyId, secretAccessKey and the statful api token
 
-$ statful-aws-collector start /etc/statful-aws-collector/conf/statful-aws-collector-conf.json
+$ statful-collector-aws start /etc/statful-collector-aws/conf/statful-collector-aws-conf.json
 ```
 
 ## Examples
 
-You can find here some useful usage examples of the Statful AWS Collector. In the following examples are assumed you have already installed the collector globally and followed the [Quick Start](#quick-start).
+You can find here some useful usage examples of the Statful Collector AWS. In the following examples are assumed you have already installed the collector globally and followed the [Quick Start](#quick-start).
 
 ### Collect a list of metrics
 
@@ -161,24 +161,24 @@ You can find here some useful usage examples of the Statful AWS Collector. In th
 
 ## Reference
 
-Detailed reference if you want to take full advantage from Statful AWS Collector.
+Detailed reference if you want to take full advantage from Statful Collector AWS.
 
 ### CLI
 
 ```bash
-$ statful-aws-collector generate-config <path>
+$ statful-collector-aws generate-config <path>
 ```
 
 Creates a default configuration at the given path. If the given path doesn't exists, it will be created.
 
 ```bash
-$ statful-aws-collector start <path>
+$ statful-collector-aws start <path>
 ```
 
 Starts the collector with the config on given path.
 
 ```bash
-$ statful-aws-collector help
+$ statful-collector-aws help
 ```
 
 Shows a small help for the collector.
