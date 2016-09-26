@@ -1,6 +1,6 @@
 {
   "name": "statful-aws-collector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AWS Cloudwatch collector for Statful",
   "engines": {
     "node": ">=4.0.0",

@@ -48,6 +48,8 @@ var cli = function() {
         .usage('Usage: $0 [command] <path>')
         .command('generate-config <path>', 'Generate a default config for Statful AWS Collector on given path.')
         .command('start <path>', 'Start the Statful AWS Collector with a config on the given path.')
+        .demand(1)
+        .strict()
         .example('$0 generate-config /etc/statful-aws-collector/conf', 'Generates a default Statful AWS Collector ' +
             'config file on /etc/statful-aws-collector/conf/ with name statful-aws-collector-conf.json')
         .example('$0 start /etc/statful-aws-collector/conf/statful-aws-collector-conf.json', 'Starts the Statful AWS Collector with given config.')
