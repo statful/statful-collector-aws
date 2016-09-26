@@ -1,6 +1,6 @@
 {
-  "name": "statful-aws-collector",
-  "version": "1.0.1",
+  "name": "statful-collector-aws",
+  "version": "1.0.0",
   "description": "AWS Cloudwatch collector for Statful",
   "engines": {
     "node": ">=4.0.0",
@@ -13,7 +13,7 @@
   },
   "main": "index.js",
   "bin": {
-    "statful-aws-collector": "./bin/statful-aws-collector"
+    "statful-collector-aws": "./bin/statful-collector-aws"
   },
   "author": {
     "name": "Mindera - Software Craft"
@@ -58,7 +58,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/statful/statful-aws-collector.git"
+    "url": "https://github.com/statful/statful-collector-aws.git"
   },
   "keywords": [
     "aws",

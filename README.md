@@ -47,7 +47,7 @@ You can find here some useful usage examples of the Statful Collector AWS. In th
 
 ```json
 {
-  "statfulAwsCollector": {
+  "statfulCollectorAws": {
     ... ,
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
@@ -83,7 +83,7 @@ You can find here some useful usage examples of the Statful Collector AWS. In th
 
 ```json
 {
-  "statfulAwsCollector": {
+  "statfulCollectorAws": {
     ... ,
     "period": 60,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
@@ -129,7 +129,7 @@ You can find here some useful usage examples of the Statful Collector AWS. In th
 
 ```json
 {
-  "statfulAwsCollector": {
+  "statfulCollectorAws": {
     ... ,
     "period": 300,
     "statistics": ["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
@@ -185,9 +185,9 @@ Shows a small help for the collector.
 
 ### Configuration
 
-In the configuration file you can find 3 main sections: `statfulAwsCollector`, `bunyan`, `statfulClient`.
+In the configuration file you can find 3 main sections: `statfulCollectorAws`, `bunyan`, `statfulClient`.
 
-**StatfulAWSCollector**
+**StatfulCollectorAWS**
 
 | Option | Description | Type | Default | Required |
 |:---|:---|:---|:---|:---|
@@ -211,24 +211,7 @@ To get more information please read the [Bunyan documentation](https://github.co
 
 **StatfulClient**
 
-| Option | Description | Type | Default | Required |
-|:---|:---|:---|:---|:---|
-| _app_ | Defines the application global name. If specified sets a global tag `app=setValue`. | `string` | **none** | **NO** |
-| _default_ | Object to set methods options. | `object` | `{}` | **NO** |
-| _api_ | Defined API configurations. | `object` | **none** | **NO** |
-| _dryRun_ | Defines if metrics should be output to the logger instead of being send. | `boolean` | `false` | **NO** |
-| _flushInterval_ | Defines the periodicity of buffer flushes in **miliseconds**. | `number` | `3000` | **NO** |
-| _flushSize_ | Defines the maximum buffer size before performing a flush. | `number` | `1000` | **NO** |
-| _namespace_ | Defines the global namespace. | `string` | `application` | **NO** |
-| _sampleRate_ | Defines the rate sampling. **Should be a number between [1, 100]**. | `number` | `100` | **NO** |
-| _tags_ | Defines the global tags. | `object` | `{}` | **NO** |
-| _transport_ | Defines the transport layer to be used to send metrics.</br></br> **Valid Transports:** `udp, api` | `string` | **none** | **YES** |
-| _host_ | Defines the host name to where the metrics should be sent. Can also be set inside _api_. | `string` | `127.0.0.1` | **NO** |
-| _port_ | Defines the port. Can also be set inside _api_. | `string` | `2013` | **NO** |
-| _token_ | Defines the token to be used.  Must be set inside _api_. | `string` | **none** | **NO** |
-| _timeout_ | Defines the timeout for the transport layers in **miliseconds**. Must be set inside _api_. | `number` | `2000` | **NO** |
-
-To get more information please read the [Statful Client NodeJS documentation](https://github.com/statful/statful-client-nodejs).
+To get help and information about this specific client please read the [Statful Client NodeJS documentation](https://github.com/statful/statful-client-nodejs).
 
 ## Authors
 
@@ -236,4 +219,4 @@ To get more information please read the [Statful Client NodeJS documentation](ht
 
 ## License
 
-Statful AWS Collector is available under the MIT license. See the [LICENSE](https://raw.githubusercontent.com/statful/statful-aws-collector/master/LICENSE) file for more information.
+Statful Collector AWS is available under the MIT license. See the [LICENSE](https://raw.githubusercontent.com/statful/statful-collector-aws/master/LICENSE) file for more information.

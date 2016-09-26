@@ -22,8 +22,8 @@ class Request {
         this[_config] = config;
         this[_startTime] = startTime;
         this[_endTime] = endTime;
-        this[_period] = this[_config].statfulAwsCollector.period;
-        this[_statistics] = this[_config].statfulAwsCollector.statistics;
+        this[_period] = this[_config].statfulCollectorAws.period;
+        this[_statistics] = this[_config].statfulCollectorAws.statistics;
         this[_metricsPerRegion] = metricsPerRegion;
         this[_receivedDataPerRegion] = {};
         this[_statfulClient] = statfulClient;
@@ -67,7 +67,7 @@ class Request {
 
                 metricTags.Unit = dataPoint.Unit;
 
-                this[_config].statfulAwsCollector.statistics.forEach((statistic) => {
+                this[_config].statfulCollectorAws.statistics.forEach((statistic) => {
                     let metricValue = dataPoint[statistic];
                     let metricAgg = null;
 
@@ -104,8 +104,8 @@ class Request {
     [_cloudWatchGetMetricStatistics](region, metric) {
         return new Promise( (resolve) => {
             let cloudWatch = new AWS.CloudWatch({
-                accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
-                secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
+                accessKeyId: this[_config].statfulCollectorAws.credentials.accessKeyId,
+                secretAccessKey: this[_config].statfulCollectorAws.credentials.secretAccessKey,
                 region: region
             });
             let reqParams = {

@@ -98,7 +98,7 @@ class Collector {
             });
         });
 
-        this[_config].statfulAwsCollector.signals.forEach( (signal) => {
+        this[_config].statfulCollectorAws.signals.forEach( (signal) => {
             process.on(signal, () => {
                 this.stop(signal).then( () => {
                     process.exit(0);
@@ -132,7 +132,7 @@ class Collector {
     [_spawnRequest](callback) {
         if (!this.isStopping) {
             let now = new Date();
-            let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulAwsCollector.period - 1)));
+            let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulCollectorAws.period - 1)));
             let startTime = nowMinusPastPeriod.toISOString();
             let endTime = now.toISOString();
 
@@ -144,7 +144,7 @@ class Collector {
         // Scheduler to try to spawn another request
         setTimeout(() => {
             callback();
-        }, this[_config].statfulAwsCollector.period * 1000);
+        }, this[_config].statfulCollectorAws.period * 1000);
     }
 
     [_startCollecting]() {

@@ -1,5 +1,5 @@
 {
-  "statfulAwsCollector": {
+  "statfulCollectorAws": {
     "credentials": {
       "accessKeyId": "ACCESS_KEY_ID",
       "secretAccessKey": "SECRET_ACCESS_KEY"
@@ -24,7 +24,7 @@
     ]
   },
   "bunyan": {
-    "name": "statfulAwsCollector",
+    "name": "statfulCollectorAws",
     "level": "debug",
     "streams": []
   },
@@ -33,6 +33,6 @@
     "api": {
       "token": "STATFUL_API_TOKEN"
     },
-    "app": "statful-aws-collector"
+    "app": "statful-collector-aws"
   }
 }

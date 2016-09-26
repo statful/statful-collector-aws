@@ -9,7 +9,7 @@ describe('Request module tests', () => {
 
     beforeEach( () => {
         mockedConfig = {
-            statfulAwsCollector: {
+            statfulCollectorAws: {
                 credentials: {
                     accessKeyId: "ACCESS_KEY_ID",
                     secretAccessKey: "SECRET_ACCESS_KEY"

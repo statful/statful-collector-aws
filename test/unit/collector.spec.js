@@ -36,7 +36,7 @@ describe('Collector module tests', () => {
                 ]
             },
             bunyan: {
-                name: "statfulAwsCollector",
+                name: "statfulCollectorAws",
                 level: "debug",
                 streams: []
             },
@@ -45,7 +45,7 @@ describe('Collector module tests', () => {
                 api: {
                     "token": "STATFUL_API_TOKEN"
                 },
-                app: "statful-aws-collector"
+                app: "statful-collector-aws"
             }
         };
     });

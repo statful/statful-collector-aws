@@ -26,8 +26,8 @@ class MetricsList {
 
     buildMetricsPerRegion() {
         return new Promise( (resolve) => {
-            if (this[_config].statfulAwsCollector.metricsList.type === 'white') {
-                let whiteListConfig = this[_config].statfulAwsCollector.metricsList.metricsPerRegion;
+            if (this[_config].statfulCollectorAws.metricsList.type === 'white') {
+                let whiteListConfig = this[_config].statfulCollectorAws.metricsList.metricsPerRegion;
                 let requestsPromises = [];
 
                 eachOf(whiteListConfig,
@@ -98,8 +98,8 @@ class MetricsList {
     [_cloudWatchListMetrics](region, reqParams) {
         return new Promise( (resolve) => {
             let cloudWatch = new AWS.CloudWatch({
-                accessKeyId: this[_config].statfulAwsCollector.credentials.accessKeyId,
-                secretAccessKey: this[_config].statfulAwsCollector.credentials.secretAccessKey,
+                accessKeyId: this[_config].statfulCollectorAws.credentials.accessKeyId,
+                secretAccessKey: this[_config].statfulCollectorAws.credentials.secretAccessKey,
                 region: region
             });
             let completedRequests = 0;

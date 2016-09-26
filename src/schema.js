@@ -3,7 +3,7 @@ export const schema = {
     schema: 'http://json-schema.org/draft-04/schema#',
     type: 'object',
     properties: {
-        statfulAwsCollector: {
+        statfulCollectorAws: {
             type: 'object',
             properties: {
                 credentials: {
@@ -151,5 +151,5 @@ export const schema = {
             required: ['transport']
         },
     },
-    required: ['statfulAwsCollector', 'bunyan', 'statfulClient']
+    required: ['statfulCollectorAws', 'bunyan', 'statfulClient']
 };
