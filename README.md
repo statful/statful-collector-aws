@@ -1,5 +1,7 @@
 Statful Collector AWS
 ==============
+[npm-url]: https://npmjs.org/package/statful-collector-aws
+[npm-image]: https://badge.fury.io/js/statful-collector-aws.svg
 
 [![NPM version][npm-image]][npm-url] [![Build Status](https://travis-ci.org/statful/statful-collector-aws.svg?branch=master)](https://travis-ci.org/statful/statful-collector-aws)
 
