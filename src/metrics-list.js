@@ -178,7 +178,11 @@ class MetricsList {
             if (validDimensions[i].length !== dimension.length) {
                 break;
             }
-            valid = this[_dimensionsElementContainsAnother](validDimensions[i], dimension);
+
+            if (this[_dimensionsElementContainsAnother](validDimensions[i], dimension)) {
+                valid = true;
+                break;
+            }
         }
         return valid;
     }
@@ -196,14 +200,19 @@ class MetricsList {
         // Process dimensions information
         each(requestData.data,
             (metric, eachMetricCallback) => {
-                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName]) {
-                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] = [];
+                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion].hasOwnProperty(metric.Namespace)) {
+                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace] = {};
                 }
 
-                let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName]) {
+                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName] = [];
+                }
+
+                let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName];
                 let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
 
-                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName] =
+
+                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName] =
                     this[_addDimensionsElement](dimensionsToInsert, validMetricDimensions);
 
                 eachMetricCallback(null);
@@ -230,7 +239,7 @@ class MetricsList {
                     // Validate dimensions to use with generated dimensions information
                     each(requestData.data,
                         (metric, eachMetricCallback) => {
-                            let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.MetricName];
+                            let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName];
                             let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
 
                             if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
