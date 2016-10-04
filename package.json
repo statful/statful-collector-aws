@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "AWS Cloudwatch collector for Statful",
   "engines": {
-    "node": ">=4.0.0",
+    "node": ">=4.6.0",
     "npm": ">=3.8.0"
   },
   "scripts": {
