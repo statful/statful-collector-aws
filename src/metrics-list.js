@@ -17,8 +17,8 @@ const _metricsPerRegion = Symbol('metricsPerRegion');
 const _parseValidDimensionsFromRequestData = Symbol('parseValidDimensionsFromRequestData');
 const _parseValidMetricsWithDimensionsValidatorFromRequestsData = Symbol('parseValidMetricsWithDimensionsValidatorFromRequestsData');
 const _processReceivedRequestsData = Symbol('processReceivedRequestsData');
-const _timeoutPerBatch = Symbol('timeoutPerBatch');
 const _requestsPerBatch = Symbol('requestsPerBatch');
+const _timeoutPerBatch = Symbol('timeoutPerBatch');
 
 class MetricsList {
     constructor(config) {
