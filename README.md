@@ -180,6 +180,12 @@ $ statful-collector-aws start <path>
 Starts the collector with the config on given path.
 
 ```bash
+$ statful-collector-aws start-managed <path>
+```
+
+Starts the collector managed by pm2 with the config on given path.
+
+```bash
 $ statful-collector-aws help
 ```
 
