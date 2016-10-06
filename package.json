@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "AWS Cloudwatch collector for Statful",
   "engines": {
-    "node": ">=4.0.0",
+    "node": ">=4.6.0",
     "npm": ">=3.8.0"
   },
   "scripts": {
@@ -53,7 +53,7 @@
     "jsonschema": "^1.1.0",
     "lodash": "^4.15.0",
     "source-map-support": "^0.4.0",
-    "statful-client": "~4.1.0",
+    "statful-client": "~4.1.2",
     "yargs": "^5.0.0"
   },
   "repository": {

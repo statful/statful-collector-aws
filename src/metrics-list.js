@@ -1,5 +1,6 @@
 import Promise from 'bluebird';
 import each from 'async/each';
+import eachSeries from 'async/eachSeries';
 import eachOf from 'async/eachOf';
 import doWhilst from 'async/doWhilst';
 import AWS from 'aws-sdk';
@@ -16,12 +17,16 @@ const _metricsPerRegion = Symbol('metricsPerRegion');
 const _parseValidDimensionsFromRequestData = Symbol('parseValidDimensionsFromRequestData');
 const _parseValidMetricsWithDimensionsValidatorFromRequestsData = Symbol('parseValidMetricsWithDimensionsValidatorFromRequestsData');
 const _processReceivedRequestsData = Symbol('processReceivedRequestsData');
+const _requestsPerBatch = Symbol('requestsPerBatch');
+const _timeoutPerBatch = Symbol('timeoutPerBatch');
 
 class MetricsList {
     constructor(config) {
         this[_config] = config;
         this[_metricsPerRegion] = null;
         this[_dimensionsValidatorPerRegionAndMetric] = null;
+        this[_timeoutPerBatch] = 300;
+        this[_requestsPerBatch] = 50;
     }
 
     buildMetricsPerRegion() {
@@ -32,10 +37,21 @@ class MetricsList {
 
                 eachOf(whiteListConfig,
                     (metrics, region, eachOfCallback) => {
-                        each(metrics,
+                        let requestsCount = 0;
+
+                        eachSeries(metrics,
                             (metric, eachCallback) => {
                                 requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
-                                eachCallback(null);
+
+                                if (requestsCount >= this[_requestsPerBatch]) {
+                                    setTimeout(()=>{
+                                        requestsCount = 0;
+                                        eachCallback(null);
+                                    }, this[_timeoutPerBatch]);
+                                } else {
+                                    requestsCount++;
+                                    eachCallback(null);
+                                }
                             },
                             () => {
                                 eachOfCallback(null);
@@ -224,7 +240,9 @@ class MetricsList {
     }
 
     [_parseValidMetricsWithDimensionsValidatorFromRequestsData](requestsData, resolve) {
-        let auxMetricsPerRegion = {};
+        let auxMetricsPerRegion = {
+            totalMetrics: 0
+        };
 
         each(requestsData,
             (requestData, eachCallback) => {
@@ -250,6 +268,7 @@ class MetricsList {
                         },
                         () => {
                             auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
+                            auxMetricsPerRegion.totalMetrics += validMetrics.length;
                             eachCallback(null);
                         }
                     );

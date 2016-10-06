@@ -134,6 +134,7 @@ class Collector {
             let now = new Date();
             let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulCollectorAws.period - 1)));
 
+            // TODO - Verify this window time with AWS documentation
             now.setMinutes(now.getMinutes() - 5);
             nowMinusPastPeriod.setMinutes(nowMinusPastPeriod.getMinutes() - 5);
 
