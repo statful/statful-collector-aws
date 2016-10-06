@@ -33,7 +33,6 @@
     "api": {
       "token": "STATFUL_API_TOKEN"
     },
-    "app": "statful-collector-aws",
-    "systemStats": true
+    "app": "statful-collector-aws"
   }
 }
