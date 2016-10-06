@@ -7,7 +7,7 @@ let Request = proxyquire('../../src/request', {
 describe('Request module tests', () => {
     let mockedConfig, mockedMetricsPerRegion, mockedStatfulClient;
 
-    beforeEach( () => {
+    beforeEach( (done) => {
         mockedConfig = {
             statfulCollectorAws: {
                 credentials: {
@@ -20,8 +20,10 @@ describe('Request module tests', () => {
         };
 
         mockedMetricsPerRegion = {
+            "totalMetrics": 2,
             "us-west-2": [
                 {
+
                     "Namespace": "AWS/ELB",
                     "MetricName": "RequestCount",
                     "Dimensions": [
@@ -56,6 +58,15 @@ describe('Request module tests', () => {
         };
 
         spyOn(mockedStatfulClient, 'aggregatedPut').and.callThrough();
+
+        jasmine.clock().install();
+
+        done();
+    });
+
+    afterEach(function (done) {
+        jasmine.clock().uninstall();
+        done();
     });
 
     it('should create a request', () => {
@@ -66,9 +77,14 @@ describe('Request module tests', () => {
 
     it('should execute a request with success sending correctly processed metrics to statful client from aws cloudwatch', (done) => {
         let request = new Request(mockedConfig, mockedMetricsPerRegion, '2014-09-03T23:00:00Z', '2014-09-03T23:01:00Z', mockedStatfulClient);
+        let requestPromise = request.execute();
 
-        request.execute().then(
+        jasmine.clock().tick(1);
+
+        requestPromise.then(
             () => {
+                jasmine.clock().tick(1);
+
                 expect(mockedStatfulClient.aggregatedPut.calls.count()).toBe(10);
 
                 //Put 1

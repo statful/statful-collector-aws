@@ -46,6 +46,7 @@ describe('Metrics list module tests', () => {
                 metricsList.getMetricsPerRegion().then(
                     (metricsPerRegion) => {
                         let expectedResults = {
+                            "totalMetrics": 5,
                             "us-west-2": [
                                 {
                                     "Namespace": "AWS/ELB",
