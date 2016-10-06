@@ -133,6 +133,10 @@ class Collector {
         if (!this.isStopping) {
             let now = new Date();
             let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulCollectorAws.period - 1)));
+
+            now.setMinutes(now.getMinutes() - 5);
+            nowMinusPastPeriod.setMinutes(nowMinusPastPeriod.getMinutes() - 5);
+
             let startTime = nowMinusPastPeriod.toISOString();
             let endTime = now.toISOString();
 
