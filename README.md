@@ -200,7 +200,7 @@ In the configuration file you can find 3 main sections: `statfulCollectorAws`, `
 | Option | Description | Type | Default | Required |
 |:---|:---|:---|:---|:---|
 | _credentials_ | Defines the credentials to access AWS. | `object` | **none** | **YES** |
-| _period_ | Defines the global output level.</br></br> **Valid Periods:** `60, 120, 180, 300` | `number` | 60 | **YES** |
+| _period_ | Defines the global output level **in seconds**.</br></br> **Valid Periods:** `60, 120, 180, 300` | `number` | 60 | **YES** |
 | _statistics_ | Define the statistcs for which data should be collected.</br></br> **Valid Statistics:** `SampleCount, Average, Sum, Minimum, Maximum` | `array` | `["SampleCount", "Average", "Sum", "Minimum", "Maximum"]` | **YES** |
 | _metricsList_ | Defines metrics to collect from AWS. Here you should only configure the `metricsPerRegion` which is an object organized by AWS region. Inside each region you should set a list of metrics object to collect. Each metric object supports a `Namespace`, `MetricName` and  `Dimensions`.</br> Please check the AWS documentation ([AWS Metric Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_Metric.html) and [Amazon CloudWatch Namespaces, Dimensions, and Metrics Reference](http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)) and the [Examples](#examples) section to get more information about the metrics object. | `object` | **none** | **YES** |
 | _signals_ | Defines the proccess signals for which collector should be stopped. Any valid NodeJS signal can be added. | `array` | `["SIGTERM", "SIGINT", "SIGABRT", "SIGUSR2"]` | **YES** |
