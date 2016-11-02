@@ -186,6 +186,18 @@ $ statful-collector-aws start-managed <path>
 Starts the collector managed by pm2 with the config on given path.
 
 ```bash
+$ statful-collector-aws stop-managed
+```
+
+Stops the collector managed by pm2.
+
+```bash
+$ statful-collector-aws restart-managed
+```
+
+Restarts the collector managed by pm2.
+
+```bash
 $ statful-collector-aws help
 ```
 
