@@ -25,7 +25,13 @@ export const schema = {
                     type: 'array',
                     items: {
                         type: 'string',
-                        enum: ['SampleCount', 'Average', 'Sum', 'Minimum', 'Maximum']
+                        enum: [
+                            'SampleCount',
+                            'Average',
+                            'Sum',
+                            'Minimum',
+                            'Maximum'
+                        ]
                     }
                 },
                 metricsList: {
@@ -103,7 +109,7 @@ export const schema = {
             type: 'object',
             properties: {
                 app: {
-                   type: 'string'
+                    type: 'string'
                 },
                 default: {
                     type: 'object'
@@ -149,7 +155,7 @@ export const schema = {
                 }
             },
             required: ['transport']
-        },
+        }
     },
     required: ['statfulCollectorAws', 'bunyan', 'statfulClient']
 };

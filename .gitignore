@@ -9,3 +9,4 @@ tmp-*/
 buildfe
 .kitchen/
 *.DS_Store
+.history

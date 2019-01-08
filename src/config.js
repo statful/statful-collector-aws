@@ -1,8 +1,8 @@
 import Promise from 'bluebird';
+import { validate } from 'jsonschema';
 import path from 'path';
-import {schema} from './schema';
-import {validate} from 'jsonschema';
 import defaultConfig from '../conf/defaults.json';
+import { schema } from './schema';
 
 const _file = Symbol('file');
 const _processConfig = Symbol('processConfig');
@@ -13,12 +13,12 @@ class Config {
     }
 
     load() {
-        return new Promise( (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this[_processConfig]().then(
-                (config) => {
+                config => {
                     resolve(config);
                 },
-                (error) => {
+                error => {
                     reject(error);
                 }
             );
@@ -33,14 +33,19 @@ class Config {
                 try {
                     config = require(path.resolve(this[_file]));
                 } catch (ex) {
-                    reject('Failed to load config file ' + this[_file] + ' with: ' + ex);
+                    reject(
+                        'Failed to load config file ' +
+                            this[_file] +
+                            ' with: ' +
+                            ex
+                    );
                 }
             } else {
                 config = defaultConfig;
             }
 
             try {
-                validate(config, schema, {throwError: true});
+                validate(config, schema, { throwError: true });
             } catch (ex) {
                 reject('Failed to validate config with: ' + ex);
             }
@@ -51,5 +56,3 @@ class Config {
 }
 
 export default Config;
-
-

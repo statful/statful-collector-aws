@@ -1,18 +1,20 @@
-import Promise from 'bluebird';
-import {Util} from './util';
-import Logger from './logger';
-import whilst from 'async/whilst';
 import queue from 'async/queue';
+import whilst from 'async/whilst';
+import Promise from 'bluebird';
 import StatfulClient from 'statful-client';
-import Request from './request';
+import Logger from './logger';
 import MetricsList from './metrics-list';
+import Request from './request';
+import { Util } from './util';
 
 const _config = Symbol('config');
-const _handleSignalsAndUncaughtException = Symbol('handleSignalsAndUncaughtException');
+const _handleSignalsAndUncaughtException = Symbol(
+    'handleSignalsAndUncaughtException'
+);
 const _isProcessingRequest = Symbol('isProcessingRequest');
 const _metricsList = Symbol('metricsList');
 const _metricsListUpdateInterval = Symbol('metricsListUpdateInterval');
-const _processRequest = Symbol('processRequest') ;
+const _processRequest = Symbol('processRequest');
 const _requests = Symbol('requests');
 const _spawnRequest = Symbol('spawnRequest');
 const _statfulClient = Symbol('statfulClient');
@@ -20,25 +22,33 @@ const _startCollecting = Symbol('startCollecting');
 const _startMetricsListUpdate = Symbol('startMetricsListUpdate');
 const _stopCollecting = Symbol('stopCollecting');
 const _stopMetricsListUpdate = Symbol('stopMetricsListUpdate');
-const _utcTimeToStopProcessingRequests = Symbol('utcTimeToStopProcessingRequests');
+const _utcTimeToStopProcessingRequests = Symbol(
+    'utcTimeToStopProcessingRequests'
+);
 
 class Collector {
     constructor(config) {
         this[_config] = config;
         this.isStopping = false;
         this.started = false;
-        this.log = Logger.sharedInstance(this[_config]).child({file: Util.getCurrentFile(module)}, true);
+        this.log = Logger.sharedInstance(this[_config]).child(
+            { file: Util.getCurrentFile(module) },
+            true
+        );
         this[_requests] = queue((request, callback) => {
             this[_processRequest](request, callback);
         }, 3);
         this[_utcTimeToStopProcessingRequests] = -1;
         this[_isProcessingRequest] = false;
         this[_metricsList] = new MetricsList(this[_config]);
-        this[_statfulClient] = new StatfulClient(this[_config].statfulClient, this.log);
+        this[_statfulClient] = new StatfulClient(
+            this[_config].statfulClient,
+            this.log
+        );
     }
 
     start() {
-        return new Promise( (resolve) => {
+        return new Promise(resolve => {
             if (!this.started && !this.isStopping) {
                 this.log.info('Collector begins start process.');
 
@@ -48,16 +58,19 @@ class Collector {
                 this[_isProcessingRequest] = false;
                 this[_metricsList].clearMetricsPerRegion();
 
-                let startPromises = [this[_startCollecting](), this[_startMetricsListUpdate]()];
-                Promise.all(startPromises).then( () => {
+                let startPromises = [
+                    this[_startCollecting](),
+                    this[_startMetricsListUpdate]()
+                ];
+                Promise.all(startPromises).then(() => {
                     this.log.info('Collector was started.');
                     this[_handleSignalsAndUncaughtException]();
                     resolve();
                 });
-
-
-            } else if(this.isStopping) {
-                this.log.info('You can\'t start Collector because it\'s still stopping.');
+            } else if (this.isStopping) {
+                this.log.info(
+                    "You can't start Collector because it's still stopping."
+                );
             } else {
                 this.log.info('Collector has been already started.');
                 resolve();
@@ -66,23 +79,34 @@ class Collector {
     }
 
     stop(signal) {
-        return new Promise( (resolve) => {
+        return new Promise(resolve => {
             if (this.started) {
-                signal ? this.log.info('Receive %s - will exit, waiting for in-flight requests to complete.', signal)
-                    : this.log.info('will exit, waiting for in-flight requests to complete.', signal);
+                signal
+                    ? this.log.info(
+                          'Receive %s - will exit, waiting for in-flight requests to complete.',
+                          signal
+                      )
+                    : this.log.info(
+                          'will exit, waiting for in-flight requests to complete.',
+                          signal
+                      );
 
                 this.started = false;
                 this.isStopping = true;
 
-                let stopPromises = [this[_stopCollecting](), this[_stopMetricsListUpdate]()];
-                Promise.all(stopPromises).then( () => {
+                let stopPromises = [
+                    this[_stopCollecting](),
+                    this[_stopMetricsListUpdate]()
+                ];
+                Promise.all(stopPromises).then(() => {
                     this.isStopping = false;
                     this.log.info('Collector was stopped.');
                     resolve();
                 });
-
             } else if (this.isStopping) {
-                this.log.info('Collector is stopping. Wait please to not loose any in-flight requests.');
+                this.log.info(
+                    'Collector is stopping. Wait please to not loose any in-flight requests.'
+                );
             } else {
                 this.log.info('Collector has been already stopped.');
                 resolve();
@@ -91,16 +115,16 @@ class Collector {
     }
 
     [_handleSignalsAndUncaughtException]() {
-        process.on('uncaughtException', (err) => {
+        process.on('uncaughtException', err => {
             this.log.error(err);
-            this.stop().then( () => {
+            this.stop().then(() => {
                 process.exit(0);
             });
         });
 
-        this[_config].statfulCollectorAws.signals.forEach( (signal) => {
+        this[_config].statfulCollectorAws.signals.forEach(signal => {
             process.on(signal, () => {
-                this.stop(signal).then( () => {
+                this.stop(signal).then(() => {
                     process.exit(0);
                 });
             });
@@ -110,14 +134,25 @@ class Collector {
     [_processRequest](request, callback) {
         if (request instanceof Request) {
             let requestEndTimeUTC = new Date(request.endTime).getTime();
-            if (this[_utcTimeToStopProcessingRequests] === -1 || requestEndTimeUTC <= this[_utcTimeToStopProcessingRequests]) {
-                this.log.debug('Start processing a request. Requests queue still have: ' + this[_requests].length() + ' requests.');
+            if (
+                this[_utcTimeToStopProcessingRequests] === -1 ||
+                requestEndTimeUTC <= this[_utcTimeToStopProcessingRequests]
+            ) {
+                this.log.debug(
+                    'Start processing a request. Requests queue still have: ' +
+                        this[_requests].length() +
+                        ' requests.'
+                );
 
                 this[_isProcessingRequest]++;
 
                 request.execute().then(() => {
                     this[_isProcessingRequest]--;
-                    this.log.debug('Request processing ends. Requests queue still have: ' + this[_requests].length() + ' requests.');
+                    this.log.debug(
+                        'Request processing ends. Requests queue still have: ' +
+                            this[_requests].length() +
+                            ' requests.'
+                    );
                     callback();
                 });
             } else {
@@ -132,7 +167,12 @@ class Collector {
     [_spawnRequest](callback) {
         if (!this.isStopping) {
             let now = new Date();
-            let nowMinusPastPeriod = new Date(new Date(now).setSeconds(now.getSeconds() - (this[_config].statfulCollectorAws.period - 1)));
+            let nowMinusPastPeriod = new Date(
+                new Date(now).setSeconds(
+                    now.getSeconds() -
+                        (this[_config].statfulCollectorAws.period - 1)
+                )
+            );
 
             // TODO - Verify this window time with AWS documentation
             now.setMinutes(now.getMinutes() - 5);
@@ -141,9 +181,21 @@ class Collector {
             let startTime = nowMinusPastPeriod.toISOString();
             let endTime = now.toISOString();
 
-            this[_metricsList].getMetricsPerRegion().then( (metricsPerRegion) => {
-                this[_requests].push(new Request(this[_config], metricsPerRegion, startTime, endTime, this[_statfulClient]));
-                this.log.debug('A new request was spawned. Requests queue now have: ' + this[_requests].length() + ' requests');
+            this[_metricsList].getMetricsPerRegion().then(metricsPerRegion => {
+                this[_requests].push(
+                    new Request(
+                        this[_config],
+                        metricsPerRegion,
+                        startTime,
+                        endTime,
+                        this[_statfulClient]
+                    )
+                );
+                this.log.debug(
+                    'A new request was spawned. Requests queue now have: ' +
+                        this[_requests].length() +
+                        ' requests'
+                );
             });
         }
         // Scheduler to try to spawn another request
@@ -153,12 +205,12 @@ class Collector {
     }
 
     [_startCollecting]() {
-        return new Promise( (resolve) => {
+        return new Promise(resolve => {
             whilst(
                 () => {
                     return this.started;
                 },
-                (callback) => {
+                callback => {
                     setTimeout(() => {
                         this[_spawnRequest](callback);
                     }, 0);
@@ -172,8 +224,8 @@ class Collector {
     }
 
     [_startMetricsListUpdate]() {
-        return new Promise( (resolve) => {
-            this[_metricsListUpdateInterval] = setInterval( () => {
+        return new Promise(resolve => {
+            this[_metricsListUpdateInterval] = setInterval(() => {
                 this.log.debug('Metrics list update was requested.');
                 this[_metricsList].buildMetricsPerRegion();
             }, Util.getMetricListUpdateTime() * 1000);
@@ -184,12 +236,15 @@ class Collector {
     [_stopCollecting]() {
         this[_utcTimeToStopProcessingRequests] = new Date().getTime();
 
-        return new Promise( (resolve) => {
+        return new Promise(resolve => {
             whilst(
                 () => {
-                    return this[_requests].length() > 0 || this[_isProcessingRequest] > 0;
+                    return (
+                        this[_requests].length() > 0 ||
+                        this[_isProcessingRequest] > 0
+                    );
                 },
-                (callback) => {
+                callback => {
                     setTimeout(() => {
                         callback();
                     }, 0);
@@ -202,7 +257,7 @@ class Collector {
     }
 
     [_stopMetricsListUpdate]() {
-        return new Promise( (resolve) => {
+        return new Promise(resolve => {
             clearInterval(this[_metricsListUpdateInterval]);
             resolve();
         });
@@ -210,5 +265,3 @@ class Collector {
 }
 
 export default Collector;
-
-

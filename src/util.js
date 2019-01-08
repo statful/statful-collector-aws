@@ -1,19 +1,19 @@
 import cloneDeep from 'lodash/cloneDeep';
 
 export const Util = {
-    deepCopy: (o) => {
+    deepCopy: o => {
         return cloneDeep(o);
     },
 
-    getCurrentFile: (module) => {
+    getCurrentFile: module => {
         return module.filename.split('/').pop();
     },
 
     getMetricListUpdateTime: () => {
-      return 5 * 60;
+        return 5 * 60;
     },
 
-    getObjectIndexedSymbols: (object) => {
+    getObjectIndexedSymbols: object => {
         let indexedSymbols = {};
 
         if (object) {
@@ -21,7 +21,10 @@ export const Util = {
 
             for (let i = 0; i < symbols.length; i++) {
                 let symbolName = symbols[i].toString();
-                let indexedSymbolKey = symbolName.slice(7, symbolName.length - 1);
+                let indexedSymbolKey = symbolName.slice(
+                    7,
+                    symbolName.length - 1
+                );
                 indexedSymbols[indexedSymbolKey] = symbols[i];
             }
         }

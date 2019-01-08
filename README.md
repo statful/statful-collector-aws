@@ -21,7 +21,7 @@ Staful Collector AWS built in NodeJS. This is intended to collect metrics from A
 
 | Statful Collector AWS Version | Tested NodeJS versions  |
 |:---|:---|
-| 1.x.x | `4` and `Stable` |
+| 1.x.x | `4, 10.9.0` and `Stable` |
 
 ## Installation
 
