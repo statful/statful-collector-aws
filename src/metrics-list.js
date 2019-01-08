@@ -9,18 +9,12 @@ import { Util } from './util';
 const _addDimensionsElement = Symbol('addDimensionsElement');
 const _config = Symbol('config');
 const _cloudWatchListMetrics = Symbol('cloudWatchListMetrics');
-const _dimensionsElementContainsAnother = Symbol(
-    'dimensionsElementContainsAnother'
-);
-const _dimensionsValidatorPerRegionAndMetric = Symbol(
-    'dimensionsValidatorPerRegionAndMetric'
-);
+const _dimensionsElementContainsAnother = Symbol('dimensionsElementContainsAnother');
+const _dimensionsValidatorPerRegionAndMetric = Symbol('dimensionsValidatorPerRegionAndMetric');
 const _getDimensionsNames = Symbol('getDimensionsNames');
 const _isAValidDimension = Symbol('isAValidDimension');
 const _metricsPerRegion = Symbol('metricsPerRegion');
-const _parseValidDimensionsFromRequestData = Symbol(
-    'parseValidDimensionsFromRequestData'
-);
+const _parseValidDimensionsFromRequestData = Symbol('parseValidDimensionsFromRequestData');
 const _parseValidMetricsWithDimensionsValidatorFromRequestsData = Symbol(
     'parseValidMetricsWithDimensionsValidatorFromRequestsData'
 );
@@ -29,7 +23,7 @@ const _requestsPerBatch = Symbol('requestsPerBatch');
 const _timeoutPerBatch = Symbol('timeoutPerBatch');
 
 class MetricsList {
-    constructor(config) {
+    constructor (config) {
         this[_config] = config;
         this[_metricsPerRegion] = null;
         this[_dimensionsValidatorPerRegionAndMetric] = null;
@@ -37,13 +31,10 @@ class MetricsList {
         this[_requestsPerBatch] = 50;
     }
 
-    buildMetricsPerRegion() {
+    buildMetricsPerRegion () {
         return new Promise(resolve => {
-            if (
-                this[_config].statfulCollectorAws.metricsList.type === 'white'
-            ) {
-                let whiteListConfig = this[_config].statfulCollectorAws
-                    .metricsList.metricsPerRegion;
+            if (this[_config].statfulCollectorAws.metricsList.type === 'white') {
+                let whiteListConfig = this[_config].statfulCollectorAws.metricsList.metricsPerRegion;
                 let requestsPromises = [];
 
                 eachOf(
@@ -54,9 +45,7 @@ class MetricsList {
                         eachSeries(
                             metrics,
                             (metric, eachCallback) => {
-                                requestsPromises.push(
-                                    this[_cloudWatchListMetrics](region, metric)
-                                );
+                                requestsPromises.push(this[_cloudWatchListMetrics](region, metric));
 
                                 if (requestsCount >= this[_requestsPerBatch]) {
                                     setTimeout(() => {
@@ -75,10 +64,7 @@ class MetricsList {
                     },
                     () => {
                         Promise.all(requestsPromises).then(allRequestsData => {
-                            this[_processReceivedRequestsData](
-                                allRequestsData,
-                                resolve
-                            );
+                            this[_processReceivedRequestsData](allRequestsData, resolve);
                         });
                     }
                 );
@@ -86,11 +72,11 @@ class MetricsList {
         });
     }
 
-    clearMetricsPerRegion() {
+    clearMetricsPerRegion () {
         this[_metricsPerRegion] = null;
     }
 
-    getMetricsPerRegion() {
+    getMetricsPerRegion () {
         return new Promise(resolve => {
             if (!this[_metricsPerRegion]) {
                 this.buildMetricsPerRegion().then(() => {
@@ -102,30 +88,20 @@ class MetricsList {
         });
     }
 
-    [_addDimensionsElement](dimensionsToInsert, validDimensions) {
+    [_addDimensionsElement] (dimensionsToInsert, validDimensions) {
         let newValidDimensions = [];
         let wasNewDimensionAlreadyInserted = false;
 
         for (let i = 0; i < validDimensions.length; i++) {
             let oldDimensionsElement = validDimensions[i];
 
-            if (
-                this[_dimensionsElementContainsAnother](
-                    dimensionsToInsert,
-                    oldDimensionsElement
-                )
-            ) {
+            if (this[_dimensionsElementContainsAnother](dimensionsToInsert, oldDimensionsElement)) {
                 if (!wasNewDimensionAlreadyInserted) {
                     wasNewDimensionAlreadyInserted = true;
                     newValidDimensions.push(dimensionsToInsert);
                 }
             } else {
-                if (
-                    this[_dimensionsElementContainsAnother](
-                        oldDimensionsElement,
-                        dimensionsToInsert
-                    )
-                ) {
+                if (this[_dimensionsElementContainsAnother](oldDimensionsElement, dimensionsToInsert)) {
                     wasNewDimensionAlreadyInserted = true;
                 }
                 newValidDimensions.push(oldDimensionsElement);
@@ -139,13 +115,11 @@ class MetricsList {
         return newValidDimensions;
     }
 
-    [_cloudWatchListMetrics](region, reqParams) {
+    [_cloudWatchListMetrics] (region, reqParams) {
         return new Promise(resolve => {
             let cloudWatch = new AWS.CloudWatch({
-                accessKeyId: this[_config].statfulCollectorAws.credentials
-                    .accessKeyId,
-                secretAccessKey: this[_config].statfulCollectorAws.credentials
-                    .secretAccessKey,
+                accessKeyId: this[_config].statfulCollectorAws.credentials.accessKeyId,
+                secretAccessKey: this[_config].statfulCollectorAws.credentials.secretAccessKey,
                 region: region
             });
             let completedRequests = 0;
@@ -166,14 +140,8 @@ class MetricsList {
                         let request = pendingRequests.shift();
 
                         cloudWatch.listMetrics(request, (err, data) => {
-                            if (
-                                data &&
-                                data.Metrics &&
-                                data.Metrics.length > 0
-                            ) {
-                                receivedData = receivedData.concat(
-                                    data.Metrics
-                                );
+                            if (data && data.Metrics && data.Metrics.length > 0) {
+                                receivedData = receivedData.concat(data.Metrics);
                             }
 
                             if (data && data.NextToken) {
@@ -190,10 +158,7 @@ class MetricsList {
                     }, 0);
                 },
                 () => {
-                    return (
-                        pendingRequests.length > 0 ||
-                        requestedRequests > completedRequests
-                    );
+                    return pendingRequests.length > 0 || requestedRequests > completedRequests;
                 },
                 () => {
                     resolve({ region: region, data: receivedData });
@@ -202,7 +167,7 @@ class MetricsList {
         });
     }
 
-    [_dimensionsElementContainsAnother](dimElem, anotherDimElem) {
+    [_dimensionsElementContainsAnother] (dimElem, anotherDimElem) {
         let contains = true;
 
         for (var i = 0; i < anotherDimElem.length; i++) {
@@ -215,7 +180,7 @@ class MetricsList {
         return contains;
     }
 
-    [_getDimensionsNames](dimensions) {
+    [_getDimensionsNames] (dimensions) {
         var dimensionsNames = [];
 
         for (let i = 0; i < dimensions.length; i++) {
@@ -225,7 +190,7 @@ class MetricsList {
         return dimensionsNames;
     }
 
-    [_isAValidDimension](validDimensions, dimension) {
+    [_isAValidDimension] (validDimensions, dimension) {
         let valid = false;
 
         for (let i = 0; i < validDimensions.length; i++) {
@@ -233,12 +198,7 @@ class MetricsList {
                 break;
             }
 
-            if (
-                this[_dimensionsElementContainsAnother](
-                    validDimensions[i],
-                    dimension
-                )
-            ) {
+            if (this[_dimensionsElementContainsAnother](validDimensions[i], dimension)) {
                 valid = true;
                 break;
             }
@@ -246,17 +206,13 @@ class MetricsList {
         return valid;
     }
 
-    [_parseValidDimensionsFromRequestData](requestData, parseCallback) {
+    [_parseValidDimensionsFromRequestData] (requestData, parseCallback) {
         let metricRegion = requestData.region;
 
         if (!this[_dimensionsValidatorPerRegionAndMetric]) {
             this[_dimensionsValidatorPerRegionAndMetric] = {};
         }
-        if (
-            !this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(
-                metricRegion
-            )
-        ) {
+        if (!this[_dimensionsValidatorPerRegionAndMetric].hasOwnProperty(metricRegion)) {
             this[_dimensionsValidatorPerRegionAndMetric][metricRegion] = {};
         }
 
@@ -264,39 +220,24 @@ class MetricsList {
         each(
             requestData.data,
             (metric, eachMetricCallback) => {
-                if (
-                    !this[_dimensionsValidatorPerRegionAndMetric][
-                        metricRegion
-                    ].hasOwnProperty(metric.Namespace)
-                ) {
-                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
-                        metric.Namespace
-                    ] = {};
+                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion].hasOwnProperty(metric.Namespace)) {
+                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace] = {};
                 }
 
-                if (
-                    !this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
-                        metric.Namespace
-                    ][metric.MetricName]
-                ) {
-                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
-                        metric.Namespace
-                    ][metric.MetricName] = [];
+                if (!this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName]) {
+                    this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][
+                        metric.MetricName
+                    ] = [];
                 }
 
-                let validMetricDimensions = this[
-                    _dimensionsValidatorPerRegionAndMetric
-                ][metricRegion][metric.Namespace][metric.MetricName];
-                let dimensionsToInsert = this[_getDimensionsNames](
-                    metric.Dimensions
-                );
-
-                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
+                let validMetricDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
                     metric.Namespace
-                ][metric.MetricName] = this[_addDimensionsElement](
-                    dimensionsToInsert,
-                    validMetricDimensions
-                );
+                ][metric.MetricName];
+                let dimensionsToInsert = this[_getDimensionsNames](metric.Dimensions);
+
+                this[_dimensionsValidatorPerRegionAndMetric][metricRegion][metric.Namespace][metric.MetricName] = this[
+                    _addDimensionsElement
+                ](dimensionsToInsert, validMetricDimensions);
 
                 eachMetricCallback(null);
             },
@@ -306,10 +247,7 @@ class MetricsList {
         );
     }
 
-    [_parseValidMetricsWithDimensionsValidatorFromRequestsData](
-        requestsData,
-        resolve
-    ) {
+    [_parseValidMetricsWithDimensionsValidatorFromRequestsData] (requestsData, resolve) {
         let auxMetricsPerRegion = {
             totalMetrics: 0
         };
@@ -329,34 +267,20 @@ class MetricsList {
                     each(
                         requestData.data,
                         (metric, eachMetricCallback) => {
-                            let validDimensions = this[
-                                _dimensionsValidatorPerRegionAndMetric
-                            ][metricRegion][metric.Namespace][
-                                metric.MetricName
-                            ];
-                            let dimensionsToVerify = this[_getDimensionsNames](
-                                metric.Dimensions
-                            );
+                            let validDimensions = this[_dimensionsValidatorPerRegionAndMetric][metricRegion][
+                                metric.Namespace
+                            ][metric.MetricName];
+                            let dimensionsToVerify = this[_getDimensionsNames](metric.Dimensions);
 
-                            if (
-                                this[_isAValidDimension](
-                                    validDimensions,
-                                    dimensionsToVerify
-                                )
-                            ) {
+                            if (this[_isAValidDimension](validDimensions, dimensionsToVerify)) {
                                 validMetrics.push(metric);
                             }
 
                             eachMetricCallback(null);
                         },
                         () => {
-                            auxMetricsPerRegion[
-                                metricRegion
-                            ] = auxMetricsPerRegion[metricRegion].concat(
-                                validMetrics
-                            );
-                            auxMetricsPerRegion.totalMetrics +=
-                                validMetrics.length;
+                            auxMetricsPerRegion[metricRegion] = auxMetricsPerRegion[metricRegion].concat(validMetrics);
+                            auxMetricsPerRegion.totalMetrics += validMetrics.length;
                             eachCallback(null);
                         }
                     );
@@ -371,24 +295,18 @@ class MetricsList {
         );
     }
 
-    [_processReceivedRequestsData](requestsData, resolve) {
+    [_processReceivedRequestsData] (requestsData, resolve) {
         each(
             requestsData,
             (requestData, eachCallback) => {
                 if (requestData.data.length > 0) {
-                    this[_parseValidDimensionsFromRequestData](
-                        requestData,
-                        eachCallback
-                    );
+                    this[_parseValidDimensionsFromRequestData](requestData, eachCallback);
                 } else {
                     eachCallback(null);
                 }
             },
             () => {
-                this[_parseValidMetricsWithDimensionsValidatorFromRequestsData](
-                    requestsData,
-                    resolve
-                );
+                this[_parseValidMetricsWithDimensionsValidatorFromRequestsData](requestsData, resolve);
             }
         );
     }

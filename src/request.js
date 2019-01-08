@@ -24,7 +24,7 @@ const _timeoutPerBatch = Symbol('timeoutPerBatch');
 const _totalNumberOfRequests = Symbol('totalNumberOfRequests');
 
 class Request {
-    constructor(config, metricsPerRegion, startTime, endTime, statfulClient) {
+    constructor (config, metricsPerRegion, startTime, endTime, statfulClient) {
         this[_config] = config;
         this[_startTime] = startTime;
         this[_endTime] = endTime;
@@ -43,10 +43,8 @@ class Request {
             this[_metricsPerRegion],
             (metrics, region, eachOfRegionsCallback) => {
                 this[_cloudWatchClientPerRegion][region] = new AWS.CloudWatch({
-                    accessKeyId: this[_config].statfulCollectorAws.credentials
-                        .accessKeyId,
-                    secretAccessKey: this[_config].statfulCollectorAws
-                        .credentials.secretAccessKey,
+                    accessKeyId: this[_config].statfulCollectorAws.credentials.accessKeyId,
+                    secretAccessKey: this[_config].statfulCollectorAws.credentials.secretAccessKey,
                     region: region
                 });
                 eachOfRegionsCallback(null);
@@ -55,7 +53,7 @@ class Request {
         );
     }
 
-    execute() {
+    execute () {
         return new Promise(resolve => {
             series(
                 [
@@ -77,7 +75,7 @@ class Request {
         });
     }
 
-    [_buildAndSendDatapoints](region, metric) {
+    [_buildAndSendDatapoints] (region, metric) {
         return new Promise(resolve => {
             setTimeout(() => {
                 let metricName = metric.MetricName;
@@ -94,50 +92,40 @@ class Request {
                 each(
                     metric.Datapoints,
                     (dataPoint, eachDataPointCallback) => {
-                        let metricTimestamp = Math.round(
-                            new Date(dataPoint.Timestamp).getTime() / 1000
-                        );
+                        let metricTimestamp = Math.round(new Date(dataPoint.Timestamp).getTime() / 1000);
 
                         metricTags.Unit = dataPoint.Unit;
 
-                        this[_config].statfulCollectorAws.statistics.forEach(
-                            statistic => {
-                                let metricValue = dataPoint[statistic];
-                                let metricAgg = null;
+                        this[_config].statfulCollectorAws.statistics.forEach(statistic => {
+                            let metricValue = dataPoint[statistic];
+                            let metricAgg = null;
 
-                                switch (statistic) {
-                                    case 'SampleCount':
-                                        metricAgg = 'count';
-                                        break;
-                                    case 'Average':
-                                        metricAgg = 'avg';
-                                        break;
-                                    case 'Sum':
-                                        metricAgg = 'sum';
-                                        break;
-                                    case 'Minimum':
-                                        metricAgg = 'min';
-                                        break;
-                                    case 'Maximum':
-                                        metricAgg = 'max';
-                                        break;
-                                }
-
-                                if (metricAgg) {
-                                    this[_statfulClient].aggregatedPut(
-                                        metricName,
-                                        metricValue,
-                                        metricAgg,
-                                        metricAggFreq,
-                                        {
-                                            namespace: metricNamespace,
-                                            tags: metricTags,
-                                            timestamp: metricTimestamp
-                                        }
-                                    );
-                                }
+                            switch (statistic) {
+                                case 'SampleCount':
+                                    metricAgg = 'count';
+                                    break;
+                                case 'Average':
+                                    metricAgg = 'avg';
+                                    break;
+                                case 'Sum':
+                                    metricAgg = 'sum';
+                                    break;
+                                case 'Minimum':
+                                    metricAgg = 'min';
+                                    break;
+                                case 'Maximum':
+                                    metricAgg = 'max';
+                                    break;
                             }
-                        );
+
+                            if (metricAgg) {
+                                this[_statfulClient].aggregatedPut(metricName, metricValue, metricAgg, metricAggFreq, {
+                                    namespace: metricNamespace,
+                                    tags: metricTags,
+                                    timestamp: metricTimestamp
+                                });
+                            }
+                        });
                         eachDataPointCallback(null);
                     },
                     () => {
@@ -148,14 +136,12 @@ class Request {
         });
     }
 
-    [_calculateTimeoutPerBatch]() {
-        let timeout =
-            (this[_requestsPerBatch] * 0.4 * this[_period] * 1000) /
-            this[_totalNumberOfRequests];
+    [_calculateTimeoutPerBatch] () {
+        let timeout = (this[_requestsPerBatch] * 0.4 * this[_period] * 1000) / this[_totalNumberOfRequests];
         return Math.round(timeout);
     }
 
-    [_cloudWatchGetMetricStatistics](region, metric) {
+    [_cloudWatchGetMetricStatistics] (region, metric) {
         return new Promise(resolve => {
             setTimeout(() => {
                 let reqParams = {
@@ -168,24 +154,21 @@ class Request {
                     Dimensions: metric.Dimensions
                 };
 
-                this[_cloudWatchClientPerRegion][region].getMetricStatistics(
-                    reqParams,
-                    (err, data) => {
-                        if (data) {
-                            data.Period = this[_period];
-                            data.Statistics = this[_statistics];
-                            data.MetricName = metric.MetricName;
-                            data.Namespace = metric.Namespace;
-                            data.Dimensions = metric.Dimensions;
-                        }
-                        resolve({ region: region, data: data });
+                this[_cloudWatchClientPerRegion][region].getMetricStatistics(reqParams, (err, data) => {
+                    if (data) {
+                        data.Period = this[_period];
+                        data.Statistics = this[_statistics];
+                        data.MetricName = metric.MetricName;
+                        data.Namespace = metric.Namespace;
+                        data.Dimensions = metric.Dimensions;
                     }
-                );
+                    resolve({ region: region, data: data });
+                });
             }, 0);
         });
     }
 
-    [_getAWSMetricsData]() {
+    [_getAWSMetricsData] () {
         return new Promise(resolve => {
             let requestsPromises = [];
 
@@ -197,12 +180,7 @@ class Request {
                     eachSeries(
                         metrics,
                         (metric, eachMetricCallback) => {
-                            requestsPromises.push(
-                                this[_cloudWatchGetMetricStatistics](
-                                    region,
-                                    metric
-                                )
-                            );
+                            requestsPromises.push(this[_cloudWatchGetMetricStatistics](region, metric));
 
                             if (requestsCount >= this[_requestsPerBatch]) {
                                 setTimeout(() => {
@@ -230,18 +208,10 @@ class Request {
                                     requestData.data.Datapoints &&
                                     requestData.data.Datapoints.length > 0
                                 ) {
-                                    if (
-                                        !this[
-                                            _receivedDataPerRegion
-                                        ].hasOwnProperty(requestData.region)
-                                    ) {
-                                        this[_receivedDataPerRegion][
-                                            requestData.region
-                                        ] = [];
+                                    if (!this[_receivedDataPerRegion].hasOwnProperty(requestData.region)) {
+                                        this[_receivedDataPerRegion][requestData.region] = [];
                                     }
-                                    this[_receivedDataPerRegion][
-                                        requestData.region
-                                    ] = this[_receivedDataPerRegion][
+                                    this[_receivedDataPerRegion][requestData.region] = this[_receivedDataPerRegion][
                                         requestData.region
                                     ].concat(requestData.data);
                                 }
@@ -257,7 +227,7 @@ class Request {
         });
     }
 
-    [_sendAWSMetricsData]() {
+    [_sendAWSMetricsData] () {
         return new Promise(resolve => {
             eachOf(
                 this[_receivedDataPerRegion],

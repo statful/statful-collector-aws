@@ -5,7 +5,7 @@ const _instance = Symbol('instance');
 const _instanceEnforcer = Symbol('instanceEnforcer');
 
 class Logger {
-    constructor(instanceEnforcer, config) {
+    constructor (instanceEnforcer, config) {
         if (_instanceEnforcer !== instanceEnforcer) {
             throw 'Cannot construct singleton.';
         }
@@ -15,7 +15,7 @@ class Logger {
         return bunyan.createLogger(config.bunyan);
     }
 
-    static sharedInstance(config) {
+    static sharedInstance (config) {
         if (!this[_instance]) {
             try {
                 this[_instance] = new Logger(_instanceEnforcer, config);
@@ -27,7 +27,7 @@ class Logger {
         return this[_instance];
     }
 
-    [_getBunyanStreams](bunyanConfig) {
+    [_getBunyanStreams] (bunyanConfig) {
         let streams = bunyanConfig.streams;
         let streamsLevel = bunyanConfig.level ? bunyanConfig.level : 'info';
         if (streams.length === 0) {

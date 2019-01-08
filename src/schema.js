@@ -1,4 +1,3 @@
-/* istanbul ignore next */
 export const schema = {
     schema: 'http://json-schema.org/draft-04/schema#',
     type: 'object',
@@ -25,13 +24,7 @@ export const schema = {
                     type: 'array',
                     items: {
                         type: 'string',
-                        enum: [
-                            'SampleCount',
-                            'Average',
-                            'Sum',
-                            'Minimum',
-                            'Maximum'
-                        ]
+                        enum: ['SampleCount', 'Average', 'Sum', 'Minimum', 'Maximum']
                     }
                 },
                 metricsList: {

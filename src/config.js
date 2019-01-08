@@ -8,11 +8,11 @@ const _file = Symbol('file');
 const _processConfig = Symbol('processConfig');
 
 class Config {
-    constructor(file) {
+    constructor (file) {
         this[_file] = file;
     }
 
-    load() {
+    load () {
         return new Promise((resolve, reject) => {
             this[_processConfig]().then(
                 config => {
@@ -25,7 +25,7 @@ class Config {
         });
     }
 
-    [_processConfig]() {
+    [_processConfig] () {
         return new Promise((resolve, reject) => {
             let config;
 
@@ -33,12 +33,7 @@ class Config {
                 try {
                     config = require(path.resolve(this[_file]));
                 } catch (ex) {
-                    reject(
-                        'Failed to load config file ' +
-                            this[_file] +
-                            ' with: ' +
-                            ex
-                    );
+                    reject('Failed to load config file ' + this[_file] + ' with: ' + ex);
                 }
             } else {
                 config = defaultConfig;
