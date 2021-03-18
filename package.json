@@ -37,6 +37,7 @@
   "dependencies": {
     "async": "^2.0.1",
     "aws-sdk": "^2.384.0",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.6.1",
     "bluebird": "^3.5.3",
     "bunyan": "^1.8.1",
@@ -44,7 +45,7 @@
     "fs-extra": "^0.30.0",
     "jsonschema": "^1.1.0",
     "lodash": "^4.17.14",
-    "pm2": "^4.4.0",
+    "pm2": "^4.5.5",
     "statful-client": "~6.1.1",
     "yargs": "^15.3.1"
   },
